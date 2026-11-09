@@ -2,24 +2,75 @@
 <html lang="th">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#111820">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <title>Evening Drive — 3D First Person</title>
   <style>
     :root{color-scheme:dark;--ice:#d9eee9;--muted:#a8b6b5;--glass:#0810159c}
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111820;color:#f5f7f5;font-family:"Segoe UI",Tahoma,sans-serif}
-    #game{position:relative;width:100%;height:100%;overflow:hidden;background:#252d31}canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
-    .top{position:absolute;inset:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;background:linear-gradient(#071015a8,transparent);pointer-events:none}
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;width:100%;height:100%;overflow:hidden;background:#111820;color:#f5f7f5;
+      font-family:"Segoe UI",Tahoma,sans-serif;
+      -webkit-tap-highlight-color:transparent;
+      user-select:none;-webkit-user-select:none;
+      overscroll-behavior:none;
+    }
+    #game{position:relative;width:100%;height:100%;overflow:hidden;background:#252d31}
+    canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;position:relative;z-index:0}
+    canvas:active{cursor:grabbing}
+    .top{position:absolute;inset:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;background:linear-gradient(#071015a8,transparent);pointer-events:none;z-index:10}
     .brand{font-size:.7rem;letter-spacing:.2em;font-weight:800;color:#e1ece8;text-shadow:0 1px 8px #000}.brand small{display:block;margin-top:5px;color:#bacac5;font-size:.58rem;font-weight:500;letter-spacing:.13em}
-    .stats{display:flex;gap:8px}.stat{min-width:91px;padding:8px 11px;border:1px solid #ffffff25;border-radius:10px;background:#0710158a;backdrop-filter:blur(9px);text-align:center;box-shadow:0 5px 20px #0002}.stat span{display:block;color:#adbfbb;font-size:.58rem;letter-spacing:.14em}.stat strong{display:block;margin-top:3px;font-size:1rem;font-weight:650;font-variant-numeric:tabular-nums}.stat small{display:block;margin-top:2px;color:#b8c5c3;font-size:.55rem;letter-spacing:.08em;font-variant-numeric:tabular-nums}.gear-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;pointer-events:auto}.gear-control strong{min-width:14px;margin:0}.gear-control button{width:23px;height:22px;padding:0;border:1px solid #ffffff35;border-radius:6px;background:#ffffff18;color:#fff;font:700 .9rem "Segoe UI",sans-serif;cursor:pointer}.gear-control button:hover{background:#ffffff38}
-    .instructions{position:absolute;left:20px;top:82px;padding:10px 13px;border:1px solid #ffffff20;border-radius:10px;background:#07101578;color:#d1ddda;font-size:.72rem;line-height:1.65;backdrop-filter:blur(8px);pointer-events:none}.instructions b{color:white;font-weight:650}
-    .camera-toggle{position:absolute;top:88px;right:22px;padding:10px 15px;border:1px solid #ffffff45;border-radius:10px;background:#071015b8;color:#f5f7f5;font:600 .75rem "Segoe UI",Tahoma,sans-serif;letter-spacing:.04em;cursor:pointer;backdrop-filter:blur(9px);box-shadow:0 5px 18px #0002}.camera-toggle:hover{background:#17302ecc}
-    .message{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);text-align:center;text-shadow:0 2px 16px #000;transition:opacity .5s;pointer-events:none}.message strong{display:block;font-size:clamp(1.5rem,4vw,3.2rem);font-weight:600;letter-spacing:.15em}.message span{display:block;margin-top:9px;color:#e0e8e4;font-size:.85rem;letter-spacing:.06em}.message.hide{opacity:0}
-    .mobile{display:none;position:absolute;inset:auto 16px 18px;justify-content:space-between;align-items:end;pointer-events:none}.pad,.pedals{display:flex;gap:10px;pointer-events:auto}.touch{display:grid;place-items:center;width:60px;height:60px;border:1px solid #ffffff4a;border-radius:50%;background:#101b1dbd;color:#fff;font-size:1.35rem;user-select:none;touch-action:none;backdrop-filter:blur(8px)}.touch:active{background:#8bac9e88}.pedals .touch{width:54px;height:74px;border-radius:17px;font-size:.72rem;font-weight:750;letter-spacing:.08em}.pedals .go{border-color:#f5c47b88;background:#754a2699}.pedals .stop{border-color:#ec929288;background:#6e292999}
-    .toast{position:absolute;left:50%;top:20%;transform:translateX(-50%);padding:10px 16px;border:1px solid #ffdbb744;border-radius:9px;background:#241811a8;color:#ffe4be;font-size:.83rem;opacity:0;transition:opacity .2s;pointer-events:none}.toast.show{opacity:1}
-    .credit{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:#edf2eea8;font-size:.6rem;letter-spacing:.15em;text-shadow:0 1px 8px #000;pointer-events:none;white-space:nowrap}
-    @media(max-width:700px){.mobile{display:flex}.instructions{top:auto;bottom:110px;left:14px;font-size:.66rem}.camera-toggle{top:76px;right:13px;padding:9px 12px}.stat{min-width:68px;padding:7px}.top{padding:13px}.brand{font-size:.62rem}.stat span{font-size:.52rem}.stat strong{font-size:.88rem}.credit{display:none}}
-    @media(max-width:390px){.instructions{max-width:195px;bottom:103px}.mobile{inset:auto 11px 13px}.touch{width:54px;height:54px}.pedals .touch{width:47px;height:67px}.stats{gap:4px}}
+    .stats{display:flex;gap:8px}.stat{min-width:91px;padding:8px 11px;border:1px solid #ffffff25;border-radius:10px;background:#0710158a;backdrop-filter:blur(9px);text-align:center;box-shadow:0 5px 20px #0002}.stat span{display:block;color:#adbfbb;font-size:.58rem;letter-spacing:.14em}.stat strong{display:block;margin-top:3px;font-size:1rem;font-weight:650;font-variant-numeric:tabular-nums}.stat small{display:block;margin-top:2px;color:#b8c5c3;font-size:.55rem;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+    .gear-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;pointer-events:auto}.gear-control strong{min-width:14px;margin:0}.gear-control button{width:44px;height:44px;padding:0;border:1px solid #ffffff35;border-radius:8px;background:#ffffff18;color:#fff;font:700 1.05rem "Segoe UI",sans-serif;cursor:pointer;touch-action:manipulation}.gear-control button:hover{background:#ffffff38}.gear-control button:active{background:#ffffff55}
+    .instructions{position:absolute;left:20px;top:82px;padding:10px 13px;border:1px solid #ffffff20;border-radius:10px;background:#07101578;color:#d1ddda;font-size:.72rem;line-height:1.65;backdrop-filter:blur(8px);pointer-events:none;z-index:10}.instructions b{color:white;font-weight:650}
+    .camera-toggle{position:absolute;top:88px;right:22px;padding:10px 15px;border:1px solid #ffffff45;border-radius:10px;background:#071015b8;color:#f5f7f5;font:600 .75rem "Segoe UI",Tahoma,sans-serif;letter-spacing:.04em;cursor:pointer;backdrop-filter:blur(9px);box-shadow:0 5px 18px #0002;z-index:10;touch-action:manipulation}.camera-toggle:hover{background:#17302ecc}.camera-toggle:active{background:#2a4a46}
+    .message{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);text-align:center;text-shadow:0 2px 16px #000;transition:opacity .5s;pointer-events:none;z-index:10}.message strong{display:block;font-size:clamp(1.5rem,4vw,3.2rem);font-weight:600;letter-spacing:.15em}.message span{display:block;margin-top:9px;color:#e0e8e4;font-size:.85rem;letter-spacing:.06em}.message.hide{opacity:0}
+    .mobile{display:none;position:absolute;inset:auto 16px 18px;justify-content:space-between;align-items:end;pointer-events:none;z-index:20}.pad,.pedals{display:flex;gap:10px;pointer-events:auto}.touch{display:grid;place-items:center;width:60px;height:60px;border:1px solid #ffffff4a;border-radius:50%;background:#101b1dbd;color:#fff;font-size:1.35rem;user-select:none;touch-action:none;backdrop-filter:blur(8px)}.touch:active{background:#8bac9e88}.pedals .touch{width:54px;height:74px;border-radius:17px;font-size:.72rem;font-weight:750;letter-spacing:.08em}.pedals .go{border-color:#f5c47b88;background:#754a2699}.pedals .stop{border-color:#ec929288;background:#6e292999}
+    .toast{position:absolute;left:50%;top:20%;transform:translateX(-50%);padding:10px 16px;border:1px solid #ffdbb744;border-radius:9px;background:#241811a8;color:#ffe4be;font-size:.83rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:15}.toast.show{opacity:1}
+    .credit{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:#edf2eea8;font-size:.6rem;letter-spacing:.15em;text-shadow:0 1px 8px #000;pointer-events:none;white-space:nowrap;z-index:10}
+
+    /* ===== มือถือ/แท็บเล็ต (ทุกทิศทาง) — pointer/hover detection ===== */
+    @media (pointer: coarse), (hover: none) {
+      .mobile { display: flex; }
+      .instructions { top: auto; bottom: 120px; left: 14px; font-size: .66rem; }
+      .camera-toggle { top: 76px; right: 13px; padding: 9px 12px; }
+      .stat { min-width: 68px; padding: 7px; }
+      .top { padding: 13px; }
+      .brand { font-size: .62rem; }
+      .stat span { font-size: .52rem; }
+      .stat strong { font-size: .88rem; }
+      .credit { display: none; }
+    }
+
+    /* ===== มือถือแนวนอน / จอเตี้ย ===== */
+    @media (pointer: coarse) and (max-height: 500px) {
+      .top { padding: 8px 12px; }
+      .brand { font-size: .58rem; }
+      .brand small { font-size: .5rem; }
+      .stat { min-width: 58px; padding: 5px 8px; }
+      .stat strong { font-size: .78rem; }
+      .stat span { font-size: .48rem; }
+      .stat small { font-size: .48rem; }
+      .instructions { bottom: 96px; left: 10px; padding: 6px 9px; font-size: .6rem; line-height: 1.5; max-width: 170px; }
+      .camera-toggle { top: 60px; right: 10px; padding: 7px 10px; font-size: .68rem; }
+      .gear-control button { width: 34px; height: 34px; font-size: .9rem; }
+      .mobile { inset: auto 10px 10px; }
+      .touch { width: 52px; height: 52px; }
+      .pedals .touch { width: 46px; height: 62px; }
+      .message strong { font-size: 1.2rem; }
+      .message span { font-size: .72rem; }
+    }
+
+    /* ===== จอแคบมาก (มือถือแนวตั้งจิ๋ว) ===== */
+    @media (max-width: 390px) and (pointer: coarse) {
+      .instructions { max-width: 175px; bottom: 108px; }
+      .mobile { inset: auto 11px 13px; }
+      .touch { width: 54px; height: 54px; }
+      .pedals .touch { width: 47px; height: 67px; }
+      .stats { gap: 4px; }
+    }
   </style>
 </head>
 <body>
@@ -80,17 +131,15 @@
   const yellowMat=new THREE.MeshStandardMaterial({color:0xe0bd72,roughness:.8});
   const railMat=new THREE.MeshStandardMaterial({color:0x8a8b82,metalness:.55,roughness:.47});
 
-  // Soft late-afternoon sky, made locally so the game works without image downloads.
   const skyCanvas=document.createElement("canvas");skyCanvas.width=1024;skyCanvas.height=512;const sg=skyCanvas.getContext("2d");
   const skyGrad=sg.createLinearGradient(0,0,0,512);skyGrad.addColorStop(0,"#526e88");skyGrad.addColorStop(.48,"#b2b4ac");skyGrad.addColorStop(.78,"#e5bd99");skyGrad.addColorStop(1,"#dfb48b");sg.fillStyle=skyGrad;sg.fillRect(0,0,1024,512);
   for(let i=0;i<34;i++){const x=Math.random()*1024,y=60+Math.random()*210,r=18+Math.random()*70;const cloud=sg.createRadialGradient(x,y,1,x,y,r);cloud.addColorStop(0,"#f5e9d44a");cloud.addColorStop(1,"#f5e9d400");sg.fillStyle=cloud;sg.fillRect(x-r,y-r,r*2,r*2)}
-  const skyTex=new THREE.CanvasTexture(skyCanvas);skyTex.mapping=THREE.EquirectangularReflectionMapping;skyTex.encoding=THREE.SRGBEncoding;scene.background=skyTex;scene.environment=skyTex;
+  const skyTex=new THREE.CanvasTexture(skyCanvas);skyTex.mapping=THREE.EquirectangularReflectionMapping;skyTex.encoding=THREE.sRGBEncoding;scene.background=skyTex;scene.environment=skyTex;
   textureLoader.load("./assets/autumn-road-panorama.jpg",panorama=>{panorama.mapping=THREE.EquirectangularReflectionMapping;panorama.encoding=THREE.sRGBEncoding;panorama.magFilter=THREE.LinearFilter;panorama.minFilter=THREE.LinearMipmapLinearFilter;scene.background=panorama;scene.environment=panorama},undefined,error=>console.error("Could not load the panorama",error));
   const world=new THREE.Group();scene.add(world);
 
   const roadLength=4200, roadWidth=14, segment=14;
   function centerX(z){return 24*Math.sin(z*Math.PI*4/roadLength)+8*Math.sin(z*Math.PI*10/roadLength+1.2)}
-  // A broad rolling landscape that rises into distant hills away from the road.
   const groundLength=roadLength,groundOffset=-groundLength/2;
   function terrainHeight(x,z,cx){
     const distance=Math.abs(x-cx);
@@ -103,7 +152,6 @@
   const pos=terrainGeo.attributes.position;
   for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i)+groundOffset;pos.setY(i,terrainHeight(x,z,centerX(z)))}
   terrainGeo.computeVertexNormals();const terrain=new THREE.Mesh(terrainGeo,grassMat);terrain.position.z=groundOffset;terrain.receiveShadow=true;world.add(terrain);
-  // Winding road surface and shoulder strips.
   const roadVerts=[],roadUvs=[],roadIdx=[],shoulderVerts=[],shoulderIdx=[];
   const segments=Math.ceil(roadLength/segment);
   for(let i=0;i<=segments;i++){
@@ -121,11 +169,9 @@
   const roadEdgeLine=roadWidth*.5-.25;
   stripeMesh(0,roadLength, .14,-roadEdgeLine,whiteMat,.11);stripeMesh(0,roadLength,.14,roadEdgeLine,whiteMat,.11);
   stripeMesh(0,roadLength,.12,0,yellowMat,.105);
-  // A subtle road-edge strip and broken passing marks.
   stripeMesh(0,roadLength,.11,-(roadEdgeLine-.45),whiteMat,.11);stripeMesh(0,roadLength,.11,roadEdgeLine-.45,whiteMat,.11);
   const dashes=[];for(let z=-14;z>-roadLength;z-=68){const dash=stripeMesh(z,23,.13,0,whiteMat,.115);dashes.push({mesh:dash,z})}
 
-  // Guardrails, reflector posts, and tree lines add scale to the open road.
   function addInstancedRoadside(geometry,material,records,withColors=false){
     const mesh=new THREE.InstancedMesh(geometry,material,records.length),dummy=new THREE.Object3D();
     for(let i=0;i<records.length;i++){
@@ -173,15 +219,12 @@
   addInstancedRoadside(new THREE.ConeGeometry(1,1,9,2),treeMaterial,treeRecords,true);
   addInstancedRoadside(new THREE.CylinderGeometry(.75,.95,1,7),new THREE.MeshStandardMaterial({color:0xffffff,roughness:1}),trunkRecords,true);
 
-  // The distant roadside is a photographic panorama; keep the near field for the driving surface.
-  // Two matching road sections let the scenery recycle seamlessly as the car travels.
   const trackA=world;
   const trackB=world.clone(true);
   trackB.position.z=-roadLength;
   scene.add(trackB);
   const trackSections=[trackA,trackB];
 
-  // Porsche 911 RWB (993), loaded from the local Sketchfab GLB asset.
   camera.rotation.order="YXZ";
   const playerRig=new THREE.Group();scene.add(playerRig);
   let cameraMode="driver",playerCar=null,orbitYaw=0,orbitPitch=.18,orbitDistance=6.8,orbitDrag=null;
@@ -251,7 +294,6 @@
     vehicleTemplate=gltf.scene;
     vehicleTemplate.traverse(object=>{if(object.isMesh){object.castShadow=true;object.receiveShadow=true}});
     playerCar=vehicleTemplate.clone(true);playerRig.add(playerCar);
-    // Keep the 911 cockpit for the driver; restore the full car in chase view.
     playerCar.traverse(object=>{
       if(/Main_body|Body_Paint|Tire|(?:RL|FL|FR|RR)_wheel|Fender|Mirror|Hood|Bonnet|Wing|Spoiler|bumper|Headlight|Taillight|Windshield|Windows|Window_circuit|Sunroof|glass|Exhaust|Blinker/i.test(object.name)){
         driverHiddenParts.push(object);object.visible=false;
@@ -396,7 +438,6 @@
     const roadX=centerX(worldZ);playerRig.position.set(roadX+offset,.18,worldZ);
     const aheadX=centerX(worldZ-80)-roadX;playerRig.rotation.y=Math.PI-Math.atan2(aheadX,80)-steer*.045;
     if(cameraMode==="chase")updateChaseCamera();else camera.rotation.z=-steer*.018;
-    // Keep terrain, road, trees and roadside detail under the moving cockpit.
     if(worldZ < -roadLength){
       worldZ+=roadLength;
       playerRig.position.z=worldZ;
@@ -417,11 +458,28 @@
   function draw(){renderer.render(scene,camera)}
   function animate(now){const dt=Math.min(.04,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(animate)}
   requestAnimationFrame(animate);
-  function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight)}
+  function resize(){
+    camera.aspect=innerWidth/innerHeight;
+    camera.updateProjectionMatrix();
+    const mobilePixelCap = (matchMedia('(pointer:coarse)').matches || innerWidth < 900) ? 1.3 : 1.7;
+    renderer.setPixelRatio(Math.min(devicePixelRatio, mobilePixelCap));
+    renderer.setSize(innerWidth,innerHeight);
+  }
   addEventListener("resize",resize);
+  addEventListener("orientationchange",()=>setTimeout(resize,120));
+  document.addEventListener("visibilitychange",()=>{if(document.hidden)held.clear();});
   addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();held.add(e.key);if(e.key.toLowerCase()==="w"||e.key==="ArrowUp")startEngineAudio();if(!e.repeat&&e.key.toLowerCase()==="e")changeGear(1);if(!e.repeat&&e.key.toLowerCase()==="q")changeGear(-1);if(e.key.toLowerCase()==="c"){cameraMode=cameraMode==="driver"?"chase":"driver";applyCameraMode()}if(e.key.toLowerCase()==="r")location.reload()});
   addEventListener("keyup",e=>held.delete(e.key));addEventListener("blur",()=>held.clear());
-  document.querySelectorAll(".touch").forEach(button=>{const key=button.dataset.key;button.addEventListener("pointerdown",e=>{e.preventDefault();held.add(key);if(key==="w"||key==="ArrowUp")startEngineAudio();button.setPointerCapture(e.pointerId)});for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>held.delete(key))});
+  document.querySelectorAll(".touch").forEach(button=>{
+    const key=button.dataset.key;
+    button.addEventListener("pointerdown",e=>{e.preventDefault();held.add(key);if(key==="w"||key==="ArrowUp")startEngineAudio();try{button.setPointerCapture(e.pointerId)}catch(_){}});
+    for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>held.delete(key));
+    button.addEventListener("contextmenu",e=>e.preventDefault());
+  });
+  // ล็อก landscape ถ้าเบราว์เซอร์รองรับ (เฉพาะมือถือ)
+  if(matchMedia('(pointer:coarse)').matches && screen.orientation?.lock){
+    screen.orientation.lock('landscape').catch(()=>{});
+  }
 })();
 </script>
 </body>
