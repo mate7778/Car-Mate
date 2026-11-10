@@ -72,7 +72,23 @@
       .dashboard{transform:scale(0.7);bottom:95px;}
       .car-selector{bottom:200px;transform:scale(0.8);}
     }
+  
+    /* ===== Mobile Touch Controls ===== */
+    .toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%) translateY(10px);padding:8px 18px;border:1px solid #ffffff30;border-radius:20px;background:#071015d8;color:#ffd7d7;font:600 .7rem "Segoe UI",sans-serif;letter-spacing:.03em;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:14;white-space:nowrap}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .mobile{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;padding:0 16px 18px;z-index:9;pointer-events:none}
+    .mobile .pad{display:flex;gap:14px;pointer-events:auto}
+    .mobile .pedals{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}
+    .touch{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;width:64px;height:64px;border-radius:50%;border:1px solid #ffffff45;background:#ffffff16;color:#fff;font:700 1.6rem/64px "Segoe UI",sans-serif;text-align:center;backdrop-filter:blur(8px);box-shadow:0 5px 18px #0004}
+    .touch:active{background:#ffffff45;transform:scale(.94)}
+    .touch.go{width:64px;height:84px;border-radius:18px;background:#1fae5e33;border-color:#39d97b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#c8ffd8}
+    .touch.go:active{background:#1fae5e88}
+    .touch.stop{width:64px;height:84px;border-radius:18px;background:#c0333330;border-color:#ff5b5b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#ffd0d0}
+    .touch.stop:active{background:#c0333388}
+    @media(hover:none) and (pointer:coarse),(max-width:700px){.mobile{display:flex}}
+    @media(max-width:700px){.credit{display:none}}
   </style>
+<base target="_blank">
 </head>
 <body>
 <main id="game">
@@ -899,6 +915,11 @@
   requestAnimationFrame(animate);
   function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight)}
   addEventListener("resize",resize);
+
+  document.addEventListener("contextmenu",e=>e.preventDefault());
+  document.addEventListener("gesturestart",e=>e.preventDefault());
+  let lastTouchEnd=0;
+  document.addEventListener("touchend",e=>{const n=Date.now();if(n-lastTouchEnd<300)e.preventDefault();lastTouchEnd=n},{passive:false});
   addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();held.add(e.key);if(e.key.toLowerCase()==="w"||e.key==="ArrowUp")startEngineAudio();if(!e.repeat&&e.key.toLowerCase()==="e")changeGear(1);if(!e.repeat&&e.key.toLowerCase()==="q")changeGear(-1);if(e.key.toLowerCase()==="c"){cameraMode=cameraMode==="driver"?"chase":"driver";applyCameraMode()}if(e.key.toLowerCase()==="r")location.reload()});
   addEventListener("keyup",e=>held.delete(e.key));addEventListener("blur",()=>held.clear());
   document.querySelectorAll(".touch").forEach(button=>{const key=button.dataset.key;button.addEventListener("pointerdown",e=>{e.preventDefault();held.add(key);if(key==="w"||key==="ArrowUp")startEngineAudio();button.setPointerCapture(e.pointerId)});for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>held.delete(key))});
