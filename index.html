@@ -466,14 +466,55 @@
     if(!audioContext){
       try{
         audioContext=new AudioContextClass();
-        engineFilter=audioContext.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=2500;engineFilter.Q.value=3.5;
+        // ฟิลเตอร์ต่ำลง ตัดแหลม เสียงเลยทุ้มขึ้น
+        engineFilter=audioContext.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=1100;engineFilter.Q.value=1.6;
         engineGain=audioContext.createGain();engineGain.gain.value=.0001;engineFilter.connect(engineGain);engineGain.connect(audioContext.destination);
-        engineOscillator=audioContext.createOscillator();engineOscillator.type="sawtooth";engineOscillator.frequency.value=50;engineOscillator.connect(engineFilter);engineOscillator.start();
-        engineHarmonic=audioContext.createOscillator();engineHarmonic.type="sine";engineHarmonic.frequency.value=150;
-        const harmonicGain=audioContext.createGain();harmonicGain.gain.value=.35;engineHarmonic.connect(harmonicGain);harmonicGain.connect(engineFilter);engineHarmonic.start();
+        // โอเวอร์ไดรฟ์เล็กน้อยเพื่อเสียงดุ ทุ้ม (WaveShaper soft-clip)
+        const shaper=audioContext.createWaveShaper();const curve=new Float32Array(1024);
+        for(let i=0;i<1024;i++){const x=i/511.5-1;curve[i]=Math.tanh(x*2.2)}shaper.curve=curve;shaper.oversample="2x";
+        engineFilter.disconnect();engineFilter.connect(shaper);shaper.connect(engineGain);
+        // โอสซิลเลเตอร์หลัก รอบต่ำลง (ทุ้มกว่าเดิม)
+        engineOscillator=audioContext.createOscillator();engineOscillator.type="sawtooth";engineOscillator.frequency.value=40;engineOscillator.connect(engineFilter);engineOscillator.start();
+        // ซับเบสไซน์ เสริมความทุ้มลงไปอีก (ความถี่ครึ่งหนึ่งของตัวหลัก)
+        engineHarmonic=audioContext.createOscillator();engineHarmonic.type="sine";engineHarmonic.frequency.value=40;
+        const subGain=audioContext.createGain();subGain.gain.value=.85;
+        const subFilter=audioContext.createBiquadFilter();subFilter.type="lowpass";subFilter.frequency.value=320;
+        engineHarmonic.connect(subGain);subGain.connect(subFilter);subFilter.connect(engineFilter);engineHarmonic.start();
       }catch(error){console.warn("Engine audio is unavailable",error);audioContext=null;return}
     }
     if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
+  }
+
+  // ===== เสียงปะทุออกท่อ (Backfire Pop) =====
+  let noiseBuffer=null;
+  function playExhaustPop(intensity=1){
+    if(!audioContext||audioContext.state!=="running")return;
+    try{
+      if(!noiseBuffer){
+        const len=audioContext.sampleRate*0.25;noiseBuffer=audioContext.createBuffer(1,len,audioContext.sampleRate);
+        const data=noiseBuffer.getChannelData(0);
+        for(let i=0;i<len;i++)data[i]=Math.random()*2-1;
+      }
+      const t=audioContext.currentTime;
+      const src=audioContext.createBufferSource();src.buffer=noiseBuffer;
+      const bp=audioContext.createBiquadFilter();bp.type="bandpass";
+      bp.frequency.value=950+Math.random()*450;bp.Q.value=.9;
+      const lp=audioContext.createBiquadFilter();lp.type="lowpass";lp.frequency.value=2600;
+      const g=audioContext.createGain();
+      const peak=Math.min(.5,.26*intensity);
+      g.gain.setValueAtTime(peak,t);
+      g.gain.exponentialRampToValueAtTime(.001,t+.16+Math.random()*.08);
+      src.connect(bp);bp.connect(lp);lp.connect(g);g.connect(audioContext.destination);
+      src.start(t);src.stop(t+.3);
+      // ส่วนทุ้ม (sub-thump) ที่ตามมา
+      const sub=audioContext.createOscillator();sub.type="sine";
+      sub.frequency.setValueAtTime(85+Math.random()*25,t);
+      sub.frequency.exponentialRampToValueAtTime(38,t+.13);
+      const sg=audioContext.createGain();sg.gain.setValueAtTime(peak*1.1,t);
+      sg.gain.exponentialRampToValueAtTime(.001,t+.14);
+      sub.connect(sg);sg.connect(audioContext.destination);
+      sub.start(t);sub.stop(t+.16);
+    }catch(error){console.warn("Exhaust pop audio failed",error)}
   }
   function setBrakeLights(on){
     if(brakeState===on)return;
@@ -733,6 +774,7 @@
     if (oldGear > 0 && gear > 0 && gear < oldGear) {
       if (speed > 80) {
         spawnExhaustFlame(1.0 + Math.random() * 0.6);
+        playExhaustPop(1.1);
         flameCooldown = 0.15;
         boost = Math.min(25, boost + 6); // เติมบูสต์ให้ต่อเนื่อง
       }
@@ -788,6 +830,7 @@
       const currentRpm=900+neutralRev*(neutralRevMax-900)+Math.abs(speed)*3;
       if(currentRpm>5500 && flameCooldown<=0){
         spawnExhaustFlame(0.8+Math.random()*0.5);
+        playExhaustPop(0.85);
         flameCooldown=0.10;
         boost = Math.min(25, boost + 4);
       }
@@ -866,6 +909,7 @@
 
     if (gear > 0 && gas && boost > 15 && flameCooldown <= 0) {
       spawnExhaustFlame(0.6 + Math.random() * 0.4);
+      playExhaustPop(0.7);
       flameCooldown = 0.15;
     }
     
@@ -884,14 +928,14 @@
       const safeGas = gas ? 1 : 0;
       const safeRevFactor = Number.isFinite(neutralRev) ? neutralRev : 0;
 
-      const firingHz = safeRpm / 20;
+      const firingHz = safeRpm / 42;
       engineOscillator.frequency.setTargetAtTime(firingHz, now, .045);
-      engineHarmonic.frequency.setTargetAtTime(firingHz * 3, now, .045);
+      engineHarmonic.frequency.setTargetAtTime(firingHz * .5, now, .045);
       
-      const filterFreq = 800 + safeGas * 3500 + safeRevFactor * 2600 + Math.abs(safeSpeed) / getMaxSpeed() * 1200;
+      const filterFreq = 380 + safeGas * 1500 + safeRevFactor * 900 + Math.abs(safeSpeed) / getMaxSpeed() * 520;
       engineFilter.frequency.setTargetAtTime(filterFreq, now, .08);
       
-      const gainVal = started ? .012 + safeGas * .034 + safeRevFactor * .03 + Math.abs(safeSpeed) / getMaxSpeed() * .008 : .0001;
+      const gainVal = started ? .018 + safeGas * .04 + safeRevFactor * .034 + Math.abs(safeSpeed) / getMaxSpeed() * .01 : .0001;
       engineGain.gain.setTargetAtTime(gainVal, now, .09);
       
       lastEngineAudioUpdate = now;
