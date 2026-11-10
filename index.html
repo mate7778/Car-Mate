@@ -31,20 +31,54 @@
     .camera-toggle{position:absolute;top:88px;right:22px;padding:10px 15px;border:1px solid #ffffff45;border-radius:10px;background:#071015b8;color:#f5f7f5;font:600 .75rem "Segoe UI",Tahoma,sans-serif;letter-spacing:.04em;cursor:pointer;backdrop-filter:blur(9px);box-shadow:0 5px 18px #0002;z-index:10}.camera-toggle:hover{background:#17302ecc}
     .message{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);text-align:center;text-shadow:0 2px 16px #000;transition:opacity .5s;pointer-events:none;z-index:10}.message strong{display:block;font-size:clamp(1.5rem,4vw,3.2rem);font-weight:600;letter-spacing:.15em}.message span{display:block;margin-top:9px;color:#e0e8e4;font-size:.85rem;letter-spacing:.06em}.message.hide{opacity:0}
     
-    /* ===== Car Selector UI ===== */
-    .car-selector{position:absolute;left:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:15;pointer-events:auto;transition:opacity 0.4s ease, transform 0.4s ease}
-    .car-selector.hidden { opacity: 0; pointer-events: none; transform: translateY(20px); }
-    .car-btn{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #ffffff30;border-radius:12px;background:#071015c8;color:#e1ece8;font:600 .75rem "Segoe UI",sans-serif;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s;text-align:left}
-    .car-btn:hover{background:#17302ecc;transform:translateX(4px)}
-    .car-btn.active{border-color:#ffdd88;background:#17302ecc;box-shadow:0 0 12px #ffdd8833}
-    .car-btn .swatch{width:20px;height:20px;border-radius:50%;border:2px solid #ffffff50;flex-shrink:0}
-    .car-btn .info{display:flex;flex-direction:column;gap:2px}
-    .car-btn .name{font-size:.8rem;font-weight:700}
-    .car-btn .spec{font-size:.6rem;color:#a8b6b5;letter-spacing:.05em}
+    /* ===== Menu Container ===== */
+    .menu-container {
+      position: absolute; left: 20px; bottom: 20px;
+      display: flex; flex-direction: column; gap: 20px;
+      z-index: 15; pointer-events: auto;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      max-height: calc(100vh - 150px);
+    }
+    .menu-container.hidden {
+      opacity: 0; pointer-events: none; transform: translateX(-20px);
+    }
+    .menu-container:hover {
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .menu-container::-webkit-scrollbar { display: none; }
+
+    /* ===== Selector Groups ===== */
+    .selector-group { display: flex; flex-direction: column; gap: 6px; }
+    .selector-group .title{font:700 .6rem "Segoe UI",sans-serif;letter-spacing:.14em;color:#ffdd88;margin-bottom:2px;text-shadow:0 1px 4px #000}
+    
+    .btn-item{display:flex;align-items:center;gap:10px;padding:7px 11px;border:1px solid #ffffff30;border-radius:12px;background:#071015c8;color:#e1ece8;font:600 .72rem "Segoe UI",sans-serif;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s;text-align:left}
+    .btn-item:hover{background:#17302ecc;transform:translateX(4px)}
+    .btn-item.active{border-color:#ffdd88;background:#17302ecc;box-shadow:0 0 12px #ffdd8833}
+    .btn-item .swatch{width:18px;height:18px;border-radius:50%;border:2px solid #ffffff50;flex-shrink:0}
+    .btn-item .info{display:flex;flex-direction:column;gap:2px}
+    .btn-item .name{font-size:.75rem;font-weight:700}
+    .btn-item .spec{font-size:.6rem;color:#a8b6b5;letter-spacing:.05em}
+    
+    /* Toggle Switch Style for Traffic */
+    .traffic-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; }
+    .toggle-indicator {
+      width: 36px; height: 20px; border-radius: 10px; background: #333; position: relative;
+      border: 1px solid #ffffff40; transition: background 0.3s;
+    }
+    .toggle-indicator::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+      border-radius: 50%; background: #888; transition: transform 0.3s, background 0.3s;
+    }
+    .btn-item.active .toggle-indicator { background: #1fae5e; border-color: #39d97b; }
+    .btn-item.active .toggle-indicator::after { transform: translateX(16px); background: #fff; }
+    .btn-item.active .traffic-label { color: #c8ffd8; }
+    .traffic-label { font-weight: 700; color: #a8b6b5; }
+
 
     /* Mobile adjustments */
     @media(max-width:700px){
-      .instructions{top:auto;bottom:110px;left:14px;font-size:.66rem}
+      .instructions{display:none}
       .camera-toggle{top:76px;right:13px;padding:9px 12px}
       .stat{min-width:68px;padding:7px}
       .top{padding:13px}
@@ -58,19 +92,18 @@
       .gauge .value{top:60%;font-size:.9rem}
       .gauge .label{bottom:15px;font-size:.45rem}
       
-      .car-selector{left:10px;bottom:220px;gap:6px;transform:scale(0.9);transform-origin: bottom left;}
-      .car-btn{padding:6px 10px;gap:8px}
-      .car-btn .name{font-size:.7rem}
-      .car-btn .spec{font-size:.5rem}
-      .car-btn .swatch{width:16px;height:16px}
+      .menu-container{left:10px;bottom:100px;gap:10px;transform:scale(0.9);transform-origin: bottom left;}
+      .btn-item{padding:6px 9px;gap:8px}
+      .btn-item .name{font-size:.7rem}
+      .btn-item .spec{font-size:.5rem}
+      .btn-item .swatch{width:14px;height:14px}
     }
     @media(max-width:390px){
-      .instructions{max-width:195px;bottom:103px}
       .touch{width:54px;height:54px}
       .pedals .touch{width:47px;height:67px}
       .stats{gap:4px}
       .dashboard{transform:scale(0.7);bottom:95px;}
-      .car-selector{bottom:200px;transform:scale(0.8);}
+      .menu-container{bottom:95px;transform:scale(0.8);}
     }
   
     /* ===== Mobile Touch Controls ===== */
@@ -86,7 +119,6 @@
     .touch.stop{width:64px;height:84px;border-radius:18px;background:#c0333330;border-color:#ff5b5b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#ffd0d0}
     .touch.stop:active{background:#c0333388}
     @media(hover:none) and (pointer:coarse),(max-width:700px){.mobile{display:flex}}
-    @media(max-width:700px){.credit{display:none}}
   </style>
 <base target="_blank">
 </head>
@@ -124,11 +156,27 @@
     </div>
   </div>
 
-  <!-- ===== Car Selector ===== -->
-  <div class="car-selector" id="carSelector"></div>
+  <!-- ===== Menu Container ===== -->
+  <div class="menu-container" id="menuContainer">
+    <div class="selector-group" id="steeringSelector">
+      <div class="title">STEERING WHEEL</div>
+      <!-- ปุ่มจะถูกเจนด้วย JS -->
+    </div>
+    <div class="selector-group" id="carSelector">
+      <div class="title">CAR COLOR</div>
+      <!-- ปุ่มจะถูกเจนด้วย JS -->
+    </div>
+    <div class="selector-group" id="trafficSelector">
+      <div class="title">TRAFFIC</div>
+      <button class="btn-item active" id="trafficToggleBtn">
+        <div class="traffic-label">Cars on road</div>
+        <div class="toggle-indicator"></div>
+      </button>
+    </div>
+  </div>
 
   <div class="mobile"><div class="pad"><button class="touch" data-key="ArrowLeft" aria-label="เลี้ยวซ้าย">‹</button><button class="touch" data-key="ArrowRight" aria-label="เลี้ยวขวา">›</button></div><div class="pedals"><button class="touch stop" data-key="ArrowDown">เบรก</button><button class="touch go" data-key="ArrowUp">เร่ง</button></div></div>
-  <div class="credit">A QUIET ROAD · TAKE IT EASY</div>
+  <div class="credit" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:0.6rem; color:#ffffff50; letter-spacing:0.1em; pointer-events:none;">A QUIET ROAD · TAKE IT EASY</div>
 </main>
 <script src="./three.min.js"></script>
 <script src="./GLTFLoader.js"></script>
@@ -145,7 +193,12 @@
   const boostText = document.querySelector("#boostText");
   const boostGaugeBox = document.querySelector("#boostGaugeBox");
   const message = document.querySelector("#message"), toast = document.querySelector("#toast");
+  const menuContainer = document.querySelector("#menuContainer");
   const carSelector = document.querySelector("#carSelector");
+  const steeringSelector = document.querySelector("#steeringSelector");
+  
+  const trafficToggleBtn = document.querySelector("#trafficToggleBtn");
+  let trafficEnabled = true;
 
   const CAR_SPECS = [
     { name: "Classic Blue",   color: 0x4a90d9, swatch: "#4a90d9", maxSpeed: 710, gearSpeed: [0,110,240,360,480,580,710], accel: [0,82,64,49,38,30,24] },
@@ -157,6 +210,32 @@
   let currentCarSpec = CAR_SPECS[0];
   let currentCarIndex = 0;
   let hasStartedMoving = false;
+  
+  // ===== สเปคพวงมาลัย 5 สไตล์ =====
+  const STEERING_SPECS = [
+    { name: "Sport Leather", swatch: "#f2f4f1", style: "sport",
+      leather: 0xf2f4f1, leatherGrip: 0xe2e6e2, metal: 0xd0d5d6,
+      brushed: 0xb9c0c2, hub: 0xf6f8f5, accent: 0xcc2222, dark: 0x2b2f30,
+      spokeCount: 3, markerColor: 0xcc2222, hasButtons: true },
+    { name: "Race Carbon", swatch: "#1c1f22", style: "race",
+      leather: 0x1c1f22, leatherGrip: 0x141618, metal: 0x3a3d40,
+      brushed: 0x2e3134, hub: 0x222528, accent: 0xff2a2a, dark: 0x0c0e10,
+      spokeCount: 3, markerColor: 0xff2a2a, hasButtons: false },
+    { name: "Classic Wood", swatch: "#7a4a22", style: "classic",
+      leather: 0x7a4a22, leatherGrip: 0x5e3618, metal: 0xe8dac0,
+      brushed: 0xc9b896, hub: 0xe8dac0, accent: 0xaa8833, dark: 0x3a2210,
+      spokeCount: 3, markerColor: 0xe8dac0, hasButtons: false },
+    { name: "GT Alcantara", swatch: "#2a2a2a", style: "gt",
+      leather: 0x2a2a2a, leatherGrip: 0x1e1e1e, metal: 0x505050,
+      brushed: 0x3a3a3a, hub: 0x2a2a2a, accent: 0xff3333, dark: 0x101010,
+      spokeCount: 3, markerColor: 0xff3333, hasButtons: true },
+    { name: "Luxury Beige", swatch: "#e8dcc0", style: "luxury",
+      leather: 0xe8dcc0, leatherGrip: 0xd4c6a4, metal: 0xc9a14a,
+      brushed: 0xb08830, hub: 0xe8dcc0, accent: 0xc9a14a, dark: 0x6a5020,
+      spokeCount: 3, markerColor: 0xc9a14a, hasButtons: true }
+  ];
+  let currentSteeringIndex = 1; // default = Race Carbon
+  let currentSteeringSpec = STEERING_SPECS[1];
   
   const speedGauge = document.getElementById('speedGauge');
   const rpmGauge = document.getElementById('rpmGauge');
@@ -380,6 +459,8 @@
   const playerRig=new THREE.Group();scene.add(playerRig);
   let cameraMode="driver",playerCar=null,orbitYaw=0,orbitPitch=.18,orbitDistance=6.8,orbitDrag=null;
   let wheelSpin=0,wheelAnimations=[],steeringWheelRig=null,steeringWheelBase=null,steeringWheelLogo=null;
+  let rebuildSteeringWheel = null;
+  let steeringWheelParentGroup = null;
   const brakeLightMaterials=[],brakePointLights=[];
   let brakeState=false,audioContext=null,engineOscillator=null,engineHarmonic=null,engineFilter=null,engineGain=null,lastEngineAudioUpdate=0;
 
@@ -556,18 +637,17 @@
   
   let carBodyMaterials = [];
 
-  // ===== รถบอทจราจรบนทางด่วน (ประกาศนอก callback) =====
+  // ===== รถบอทจราจรบนทางด่วน =====
   let botCars = [];
   const BOT_LANES=[-9,-3,3,9];
   const BOT_COLORS=[0x4a90d9,0x1a1c1f,0xd91a1a,0x8cd91a,0xc0c8d0,0xe8e4da,0x7a4a2a,0x2a7a6a];
-  const BOT_SPAWN_MIN=-180;   // ใกล้สุด (ข้างหน้าผู้เล่น)
-  const BOT_SPAWN_MAX=-900;   // ไกลสุด
-  const BOT_COLLISION_DZ=5.2; // ครึ่งความยาวรถบอท (z)
-  const BOT_COLLISION_DX=2.3; // ครึ่งความกว้างรถบอท (x)
+  const BOT_SPAWN_MIN=-180;
+  const BOT_SPAWN_MAX=-900;
+  const BOT_COLLISION_DZ=5.2;
+  const BOT_COLLISION_DX=2.3;
   const PLAYER_HALF_DZ=2.6;
   const PLAYER_HALF_DX=1.1;
 
-  // ===== ฟังก์ชันสร้างรถบอท (นอก callback) =====
   function spawnBots(){
     if(!vehicleTemplate)return;
     for(const b of botCars){ scene.remove(b.mesh); }
@@ -597,7 +677,6 @@
     }
   }
 
-  // ===== ฟังก์ชัน respawn รถบอท (นอก callback) =====
   function respawnBot(bot){
     bot.lane = BOT_LANES[Math.floor(Math.random()*BOT_LANES.length)];
     bot.speed = 55 + Math.random()*45;
@@ -607,10 +686,10 @@
   }
 
   function buildCarSelector(){
-    carSelector.innerHTML = '';
+    carSelector.innerHTML = '<div class="title">CAR COLOR</div>';
     CAR_SPECS.forEach((spec, index) => {
       const btn = document.createElement('button');
-      btn.className = `car-btn ${index === currentCarIndex ? 'active' : ''}`;
+      btn.className = `btn-item ${index === currentCarIndex ? 'active' : ''}`;
       btn.innerHTML = `
         <div class="swatch" style="background:${spec.swatch}"></div>
         <div class="info">
@@ -630,7 +709,7 @@
     currentCarIndex = index;
     currentCarSpec = CAR_SPECS[index];
     
-    document.querySelectorAll('.car-btn').forEach((btn, i) => {
+    document.querySelectorAll('#carSelector .btn-item').forEach((btn, i) => {
       btn.classList.toggle('active', i === index);
     });
 
@@ -650,7 +729,68 @@
     toastTime = 1.5;
   }
 
+  // ===== Steering Selector =====
+  function buildSteeringSelector(){
+    steeringSelector.innerHTML = '<div class="title">STEERING WHEEL</div>';
+    STEERING_SPECS.forEach((spec, index) => {
+      const btn = document.createElement('button');
+      btn.className = `btn-item ${index === currentSteeringIndex ? 'active' : ''}`;
+      btn.innerHTML = `
+        <div class="swatch" style="background:${spec.swatch}"></div>
+        <div class="name">${spec.name}</div>
+      `;
+      btn.addEventListener('click', () => {
+        if (hasStartedMoving) return;
+        selectSteering(index);
+      });
+      steeringSelector.appendChild(btn);
+    });
+  }
+
+  function selectSteering(index){
+    if (hasStartedMoving) return;
+    currentSteeringIndex = index;
+    currentSteeringSpec = STEERING_SPECS[index];
+    document.querySelectorAll('#steeringSelector .btn-item').forEach((btn, i) => {
+      btn.classList.toggle('active', i === index);
+    });
+    if (playerCar && typeof rebuildSteeringWheel === "function") {
+      rebuildSteeringWheel();
+    }
+    toast.textContent = `พวงมาลัย: ${currentSteeringSpec.name}`;
+    toast.classList.add("show");
+    toastTime = 1.5;
+  }
+
+  // ===== Traffic Toggle Logic =====
+  trafficToggleBtn.addEventListener('click', () => {
+    if (hasStartedMoving) return;
+    trafficEnabled = !trafficEnabled;
+    
+    if (trafficEnabled) {
+      trafficToggleBtn.classList.add('active');
+      trafficToggleBtn.querySelector('.traffic-label').textContent = 'Cars on road';
+      // คืนชีพรถบอท
+      for (const bot of botCars) {
+        scene.add(bot.mesh);
+        respawnBot(bot);
+      }
+      toast.textContent = `เปิดรถบอทแล้ว`;
+    } else {
+      trafficToggleBtn.classList.remove('active');
+      trafficToggleBtn.querySelector('.traffic-label').textContent = 'Empty road';
+      // ซ่อนรถบอท
+      for (const bot of botCars) {
+        scene.remove(bot.mesh);
+      }
+      toast.textContent = `ปิดรถบอทแล้ว`;
+    }
+    toast.classList.add("show");
+    toastTime = 1.5;
+  });
+
   buildCarSelector();
+  buildSteeringSelector();
 
   vehicleLoader.parse(porscheBinary,"",gltf=>{
     vehicleTemplate=gltf.scene;
@@ -731,56 +871,281 @@
     steeringWheelLogo=playerCar.getObjectByName("Steering_wheel_car_logo");
     if(steeringWheelLogo){
       playerCar.updateWorldMatrix(true,true);
-      const leatherMesh=playerCar.getObjectByName("Interior_Leather_0"),mainInteriorMesh=playerCar.getObjectByName("Interior_Interior_main_0");
-      const parent=leatherMesh?.parent,centerWorld=steeringWheelLogo.getWorldPosition(new THREE.Vector3());
-      if(parent&&mainInteriorMesh?.parent===parent){
-        const pivotPosition=parent.worldToLocal(centerWorld.clone());
-        steeringWheelRig=new THREE.Group();steeringWheelRig.position.copy(pivotPosition);steeringWheelRig.position.z-=.012;steeringWheelRig.name="White steering wheel";
-        let separatedParts=0;
-        for(const partMesh of [leatherMesh,mainInteriorMesh]){
-          if(!partMesh?.isMesh||!partMesh.geometry.index)continue;
-          const sourceGeometry=partMesh.geometry,position=sourceGeometry.attributes.position,index=sourceGeometry.index.array,meshToParent=partMesh.matrix.clone();
-          const parentVertices=new Float32Array(position.count*3),vertex=new THREE.Vector3();
-          for(let i=0;i<position.count;i++){
-            vertex.fromBufferAttribute(position,i).applyMatrix4(meshToParent);
-            parentVertices[i*3]=vertex.x;parentVertices[i*3+1]=vertex.y;parentVertices[i*3+2]=vertex.z;
+      const leatherMesh = playerCar.getObjectByName("Interior_Leather_0");
+      const mainInteriorMesh = playerCar.getObjectByName("Interior_Interior_main_0");
+      const parent = leatherMesh?.parent;
+      const centerWorld = steeringWheelLogo.getWorldPosition(new THREE.Vector3());
+      
+      if(parent && mainInteriorMesh?.parent === parent){
+        const pivotPosition = parent.worldToLocal(centerWorld.clone());
+        
+        // สร้างกลุ่มพวงมาลัยใหม่
+        steeringWheelRig = new THREE.Group();
+        steeringWheelRig.position.copy(pivotPosition);
+        steeringWheelRig.position.z -= 0.015; // ขยับเข้ามาใกล้คนขับนิดนึง
+        steeringWheelRig.name = "Custom steering wheel";
+        
+        let separatedParts = 0;
+        
+        // ===== 1. ล้างพวงมาลัยเดิมออกจาก mesh ของรถ =====
+        for(const partMesh of [leatherMesh, mainInteriorMesh]){
+          if(!partMesh?.isMesh || !partMesh.geometry.index) continue;
+          
+          const sourceGeometry = partMesh.geometry;
+          const position = sourceGeometry.attributes.position;
+          const index = sourceGeometry.index.array;
+          const meshToParent = partMesh.matrix.clone();
+          const parentVertices = new Float32Array(position.count * 3);
+          const vertex = new THREE.Vector3();
+          
+          for(let i = 0; i < position.count; i++){
+            vertex.fromBufferAttribute(position, i).applyMatrix4(meshToParent);
+            parentVertices[i*3] = vertex.x;
+            parentVertices[i*3+1] = vertex.y;
+            parentVertices[i*3+2] = vertex.z;
           }
-          const wheelIndices=[],bodyIndices=[];
-          for(let i=0;i<index.length;i+=3){
-            const a=index[i],b=index[i+1],c=index[i+2];
-            const cx=(parentVertices[a*3]+parentVertices[b*3]+parentVertices[c*3])/3;
-            const cy=(parentVertices[a*3+1]+parentVertices[b*3+1]+parentVertices[c*3+1])/3;
-            const cz=(parentVertices[a*3+2]+parentVertices[b*3+2]+parentVertices[c*3+2])/3;
-            const dx=cx-pivotPosition.x,dy=cy-pivotPosition.y,dz=cz-pivotPosition.z;
-            const target=Math.abs(dz)<.05&&dx*dx+dy*dy<.24*.24;
-            (target?wheelIndices:bodyIndices).push(a,b,c);
+          
+          const wheelIndices = [], bodyIndices = [];
+          
+          // ขยายรัศมีการตัดให้กว้างขึ้น เพื่อให้ลบฐานพวงมาลัยเดิมออกหมด
+          const cutRadiusSq = 0.32 * 0.32; 
+          const cutDepth = 0.15; // ลึกขึ้นเพื่อลบจุดเชื่อมต่อคอพวงมาลัย
+          
+          for(let i = 0; i < index.length; i += 3){
+            const a = index[i], b = index[i+1], c = index[i+2];
+            
+            // หาจุดศูนย์กลางของสามเหลี่ยม
+            const cx = (parentVertices[a*3] + parentVertices[b*3] + parentVertices[c*3]) / 3;
+            const cy = (parentVertices[a*3+1] + parentVertices[b*3+1] + parentVertices[c*3+1]) / 3;
+            const cz = (parentVertices[a*3+2] + parentVertices[b*3+2] + parentVertices[c*3+2]) / 3;
+            
+            const dx = cx - pivotPosition.x;
+            const dy = cy - pivotPosition.y;
+            const dz = cz - pivotPosition.z;
+            
+            // ถ้าสามเหลี่ยมนี้อยู่ในระยะที่กำหนด ให้ตัดทิ้ง (ถือว่าเป็นพวงมาลัยเดิม)
+            const isWheelPart = (dz > -cutDepth && dz < cutDepth) && (dx*dx + dy*dy < cutRadiusSq);
+            
+            if(isWheelPart) {
+              wheelIndices.push(a, b, c);
+            } else {
+              bodyIndices.push(a, b, c);
+            }
           }
-          if(wheelIndices.length<300)continue;
-          const bodyGeometry=sourceGeometry.clone();bodyGeometry.clearGroups();bodyGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(bodyIndices),1));bodyGeometry.computeBoundingSphere();partMesh.geometry=bodyGeometry;
+          
+          if(wheelIndices.length < 300) continue; // ถ้าน้อยเกินไปแปลว่าหาไม่เจอ ข้ามไป
+          
+          // สร้าง Geometry ใหม่ที่ตัดพวงมาลัยออกแล้ว
+          const bodyGeometry = sourceGeometry.clone();
+          bodyGeometry.clearGroups();
+          bodyGeometry.setIndex(new THREE.BufferAttribute(new Uint32Array(bodyIndices), 1));
+          bodyGeometry.computeBoundingSphere();
+          partMesh.geometry = bodyGeometry;
+          
           separatedParts++;
         }
+        
         if(separatedParts){
-          parent.add(steeringWheelRig);steeringWheelLogo.visible=false;
-          const whiteLeather=new THREE.MeshStandardMaterial({color:0xf4f5f2,roughness:.32,metalness:.08});
-          const whiteMetal=new THREE.MeshStandardMaterial({color:0xd8dfdf,roughness:.25,metalness:.48});
-          const whiteHub=new THREE.MeshStandardMaterial({color:0xf9faf7,roughness:.24,metalness:.16});
-          function addWhiteWheelPart(geometry,material,position,rotation){
-            const part=new THREE.Mesh(geometry,material);part.position.set(...position);if(rotation)part.rotation.set(...rotation);part.castShadow=true;part.receiveShadow=true;steeringWheelRig.add(part);return part;
-          }
-          addWhiteWheelPart(new THREE.TorusGeometry(.175,.022,14,56),whiteLeather,[0,0,0]);
-          addWhiteWheelPart(new THREE.TorusGeometry(.148,.004,8,48),whiteMetal,[0,0,-.004]);
-          for(const angle of [Math.PI/2,Math.PI*7/6,Math.PI*11/6]){
-            const spoke=addWhiteWheelPart(new THREE.BoxGeometry(.027,.125,.032),whiteMetal,[Math.cos(angle)*.102,Math.sin(angle)*.102,-.008]);
-            spoke.rotation.z=angle-Math.PI/2;
-          }
-          addWhiteWheelPart(new THREE.CylinderGeometry(.052,.057,.04,32),whiteHub,[0,0,-.014],[Math.PI/2,0,0]);
-          addWhiteWheelPart(new THREE.CylinderGeometry(.031,.031,.043,32),whiteMetal,[0,0,-.016],[Math.PI/2,0,0]);
-          steeringWheelBase=steeringWheelRig.quaternion.clone();
-        }else{steeringWheelRig=null;console.warn("Could not remove the original steering wheel from the interior mesh")}
+          parent.add(steeringWheelRig);
+          steeringWheelLogo.visible = false;
+          steeringWheelParentGroup = parent;
+
+          rebuildSteeringWheel = function(){
+            // ลบลูกหลานเดิมออก
+            while (steeringWheelRig.children.length) {
+              const c = steeringWheelRig.children[0];
+              steeringWheelRig.remove(c);
+              c.geometry?.dispose?.();
+              if (c.material) {
+                const mats = Array.isArray(c.material) ? c.material : [c.material];
+                mats.forEach(m => m.dispose?.());
+              }
+            }
+
+            const spec = currentSteeringSpec;
+
+            // ===== วัสดุ =====
+            const leatherMat = new THREE.MeshStandardMaterial({
+              color: spec.leather, roughness: 0.75, metalness: 0.0
+            });
+            const spokeMat = new THREE.MeshStandardMaterial({
+              color: spec.metal, roughness: 0.35, metalness: 0.8
+            });
+            const hubMat = new THREE.MeshStandardMaterial({
+              color: spec.dark, roughness: 0.6, metalness: 0.3
+            });
+            const accentMat = new THREE.MeshStandardMaterial({
+              color: spec.accent, roughness: 0.4, metalness: 0.5
+            });
+            const boltMat = new THREE.MeshStandardMaterial({
+              color: 0xd4d4d4, roughness: 0.2, metalness: 1.0
+            });
+
+            function addWheelMesh(geo, mat, pos, rot){
+              const m = new THREE.Mesh(geo, mat);
+              m.position.set(pos[0], pos[1], pos[2]);
+              if (rot) m.rotation.set(rot[0]||0, rot[1]||0, rot[2]||0);
+              m.castShadow = true;
+              m.receiveShadow = true;
+              steeringWheelRig.add(m);
+              return m;
+            }
+
+            // ===== 1) วงแหวนหลัก (Rim) - ปรับให้บางลง =====
+            const R = 0.165;        // รัศมีวงล้อ
+            const tube = 0.015;     // ความหนาของวง (บางลง)
+            const rimCurve = new THREE.CatmullRomCurve3(
+              (() => {
+                const pts = [];
+                const seg = 72;
+                for (let i = 0; i <= seg; i++){
+                  const a = (i / seg) * Math.PI * 2;
+                  pts.push(new THREE.Vector3(Math.cos(a) * R, Math.sin(a) * R, 0));
+                }
+                return pts;
+              })(),
+              true, "catmullrom", 0.5
+            );
+            const rimGeo = new THREE.TubeGeometry(rimCurve, 100, tube, 16, true);
+            addWheelMesh(rimGeo, leatherMat, [0, 0, 0]);
+
+            // ===== 2) แถบสี 3 สี ที่ 12 นาฬิกา (แนบเนียนไปกับวง) =====
+            function addColoredStripe(angleCenter, colorHex, widthAngle) {
+              const startA = angleCenter - widthAngle/2;
+              const endA = angleCenter + widthAngle/2;
+              
+              const stripePts = [];
+              const steps = 12;
+              for (let i = 0; i <= steps; i++) {
+                const a = startA + (i / steps) * (endA - startA);
+                stripePts.push(new THREE.Vector3(Math.cos(a) * R, Math.sin(a) * R, 0));
+              }
+              const stripeCurve = new THREE.CatmullRomCurve3(stripePts);
+              const stripeGeo = new THREE.TubeGeometry(stripeCurve, 16, tube + 0.001, 16, false);
+              const stripeMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.6 });
+              addWheelMesh(stripeGeo, stripeMat, [0, 0, 0]);
+            }
+            
+            const stripeWidth = 0.04;
+            addColoredStripe(Math.PI/2 + stripeWidth, 0xffd700, stripeWidth); // Yellow
+            addColoredStripe(Math.PI/2, 0x0044ff, stripeWidth);               // Blue
+            addColoredStripe(Math.PI/2 - stripeWidth, 0xff1100, stripeWidth); // Red
+
+            // ===== 3) ซี่ล้อ (Spokes) แบบเพรียว 3 ซี่ - ยาวไปติดวง =====
+            const spokeAngles = [Math.PI/2, Math.PI*7/6, Math.PI*11/6]; // 12, 4, 8 นาฬิกา
+            
+            function createSpokeGeometry() {
+              const shape = new THREE.Shape();
+              const wBase = 0.035; // ความกว้างโคนซี่
+              const wTip = 0.015;  // ความกว้างปลายซี่
+              
+              // ขยายความยาวซี่ให้เลยเข้าไปในเนื้อวงแหวนเพื่อให้มันเชื่อมติดกันสนิท
+              const len = R + (tube * 0.5); 
+              
+              shape.moveTo(-wBase/2, 0);
+              shape.lineTo(wBase/2, 0);
+              shape.lineTo(wTip/2, len);
+              shape.lineTo(-wTip/2, len);
+              shape.closePath();
+
+              // เจาะรู Slot ตรงกลางซี่
+              const hole = new THREE.Path();
+              const hw = 0.004; // ครึ่งความกว้างรู
+              const hl = 0.035; // ครึ่งความยาวรู
+              const offsetY = 0.06; // เลื่อนรูขึ้นไปกลางซี่
+              
+              hole.moveTo(-hw, offsetY - hl);
+              hole.lineTo(hw, offsetY - hl);
+              hole.lineTo(hw, offsetY + hl);
+              hole.lineTo(-hw, offsetY + hl);
+              hole.closePath();
+              shape.holes.push(hole);
+
+              const geo = new THREE.ExtrudeGeometry(shape, {
+                depth: 0.008, // ความหนาซี่
+                bevelEnabled: true,
+                bevelSize: 0.0015,
+                bevelThickness: 0.0015,
+                bevelSegments: 1
+              });
+              geo.translate(0, 0, -0.004); // จัดศูนย์กลางความหนา
+              geo.rotateX(Math.PI);        // หันหน้าเข้าหาคนขับ
+              return geo;
+            }
+
+            const spokeGeo = createSpokeGeometry();
+            
+            for (const angle of spokeAngles) {
+              const spoke = new THREE.Mesh(spokeGeo, spokeMat);
+              const startOffset = 0.025; // เริ่มซี่จากขอบดุม
+              spoke.position.set(Math.cos(angle) * startOffset, Math.sin(angle) * startOffset, -0.004);
+              spoke.rotation.z = angle - Math.PI/2;
+              steeringWheelRig.add(spoke);
+            }
+
+            // ===== 4) ดุมกลาง (Hub) ทรงรีและน็อต 6 ตัว =====
+            const hubRadius = 0.042;
+            // ฐานดุม
+            addWheelMesh(
+              new THREE.CylinderGeometry(hubRadius, hubRadius, 0.012, 32),
+              hubMat, [0, 0, 0], [Math.PI/2, 0, 0]
+            );
+            // วงแหวนขอบดุม
+            addWheelMesh(
+              new THREE.TorusGeometry(hubRadius - 0.002, 0.002, 8, 32),
+              spokeMat, [0, 0, -0.006]
+            );
+
+            // น็อต 6 ตัวรอบดุม
+            for(let i=0; i<6; i++) {
+              const nAngle = (i / 6) * Math.PI * 2 + Math.PI/6;
+              const nx = Math.cos(nAngle) * (hubRadius - 0.008);
+              const ny = Math.sin(nAngle) * (hubRadius - 0.008);
+              addWheelMesh(
+                new THREE.CylinderGeometry(0.0035, 0.0035, 0.003, 8),
+                boltMat, [nx, ny, -0.007], [Math.PI/2, 0, 0]
+              );
+            }
+
+            // ฝาครอบตรงกลางดุม (โลโก้)
+            addWheelMesh(
+              new THREE.CylinderGeometry(0.014, 0.014, 0.004, 24),
+              hubMat, [0, 0, -0.008], [Math.PI/2, 0, 0]
+            );
+            // จุดแดงกลางดุม
+            addWheelMesh(
+              new THREE.CylinderGeometry(0.003, 0.003, 0.002, 16),
+              accentMat, [0, 0, -0.011], [Math.PI/2, 0, 0]
+            );
+
+            // ===== 5) ร่องนิ้ว (Thumb Grip) ที่ 9 และ 3 นาฬิกา =====
+            for (const side of [-1, 1]){
+              const angle = side > 0 ? 0 : Math.PI;
+              // สร้างรอยบากด้านในวงล้อ
+              for(let i=-2; i<=2; i++) {
+                const rx = Math.cos(angle) * (R - tube * 0.5);
+                const ry = Math.sin(angle) * (R - tube * 0.5) + (i * 0.012);
+                addWheelMesh(
+                  new THREE.BoxGeometry(0.004, 0.005, tube * 1.5),
+                  leatherMat, [rx, ry, 0]
+                );
+              }
+            }
+
+            steeringWheelBase = steeringWheelRig.quaternion.clone();
+          };
+
+          // สร้างครั้งแรก
+          rebuildSteeringWheel();
+        }else{
+          steeringWheelRig=null;
+          console.warn("Could not remove the original steering wheel from the interior mesh");
+        }
       }
     }
     
     selectCar(0);
+    selectSteering(currentSteeringIndex);
     applyCameraMode();
     spawnBots();
     message.querySelector("span").textContent="กด W หรือ ↑ เพื่อออกเดินทาง";
@@ -896,7 +1261,7 @@
 
     if (!hasStartedMoving && speed > 5) {
       hasStartedMoving = true;
-      carSelector.classList.add("hidden");
+      menuContainer.classList.add("hidden");
     }
 
     const steerInput=(right?1:0)-(left?1:0);steer+=(steerInput-steer)*Math.min(1,dt*5.5);
@@ -994,34 +1359,36 @@
     drawGauge(ctxBoost, boost, -10, 25, 18, 25);
 
     // ===== อัปเดตรถบอท + collision =====
-    for(const bot of botCars){
-      bot.z -= (bot.speed/3.6) * dt;
+    if (trafficEnabled) {
+      for(const bot of botCars){
+        bot.z -= (bot.speed/3.6) * dt;
 
-      if (bot.z > worldZ + 120){
-        respawnBot(bot);
-      }
-
-      bot.mesh.position.z = bot.z;
-      bot.mesh.position.x = bot.lane;
-      bot.mesh.rotation.y = Math.PI + Math.sin(elapsed*.7 + bot.z*.05)*.004;
-
-      const dz = bot.z - worldZ;
-      const dx = bot.lane - offset;
-      const overlapZ = BOT_COLLISION_DZ + PLAYER_HALF_DZ - Math.abs(dz);
-      const overlapX = BOT_COLLISION_DX + PLAYER_HALF_DX - Math.abs(dx);
-
-      if (overlapZ > 0 && overlapX > 0){
-        if (overlapZ < overlapX){
-          const dir = dz > 0 ? -1 : 1;
-          worldZ -= dir * overlapZ;
-          speed = Math.max(0, speed - 120*dt);
-          if (speed > 0) speed *= 0.5;
-        } else {
-          const dir = dx > 0 ? -1 : 1;
-          offset += dir * overlapX;
-          speed = Math.max(0, speed - 80*dt);
+        if (bot.z > worldZ + 120){
+          respawnBot(bot);
         }
-        if (Math.random() < dt*4) showToast();
+
+        bot.mesh.position.z = bot.z;
+        bot.mesh.position.x = bot.lane;
+        bot.mesh.rotation.y = Math.PI + Math.sin(elapsed*.7 + bot.z*.05)*.004;
+
+        const dz = bot.z - worldZ;
+        const dx = bot.lane - offset;
+        const overlapZ = BOT_COLLISION_DZ + PLAYER_HALF_DZ - Math.abs(dz);
+        const overlapX = BOT_COLLISION_DX + PLAYER_HALF_DX - Math.abs(dx);
+
+        if (overlapZ > 0 && overlapX > 0){
+          if (overlapZ < overlapX){
+            const dir = dz > 0 ? -1 : 1;
+            worldZ -= dir * overlapZ;
+            speed = Math.max(0, speed - 120*dt);
+            if (speed > 0) speed *= 0.5;
+          } else {
+            const dir = dx > 0 ? -1 : 1;
+            offset += dir * overlapX;
+            speed = Math.max(0, speed - 80*dt);
+          }
+          if (Math.random() < dt*4) showToast();
+        }
       }
     }
 
