@@ -4,84 +4,113 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#111820">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Evening Drive — 3D First Person</title>
+  <title>Evening Drive — Highway</title>
   <style>
-    :root{color-scheme:dark;--ice:#d9eee9;--muted:#a8b6b5;--glass:#0810159c}
-    *{box-sizing:border-box}
-    html,body{
-      margin:0;width:100%;height:100%;overflow:hidden;background:#111820;color:#f5f7f5;
-      font-family:"Segoe UI",Tahoma,sans-serif;
-      -webkit-tap-highlight-color:transparent;
-      user-select:none;-webkit-user-select:none;
-      overscroll-behavior:none;
-    }
+    :root{color-scheme:dark;--ice:#d9eee9;--muted:#a8b6b5;--glass:#0810159c;--accent:#ff4d4d}
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#111820;color:#f5f7f5;font-family:"Segoe UI",Tahoma,sans-serif;-webkit-tap-highlight-color:transparent;user-select:none;overscroll-behavior:none}
     #game{position:relative;width:100%;height:100%;overflow:hidden;background:#252d31}
-    canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;position:relative;z-index:0}
-    canvas:active{cursor:grabbing}
+    canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab;position:relative;z-index:0}canvas:active{cursor:grabbing}
+    
     .top{position:absolute;inset:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;background:linear-gradient(#071015a8,transparent);pointer-events:none;z-index:10}
     .brand{font-size:.7rem;letter-spacing:.2em;font-weight:800;color:#e1ece8;text-shadow:0 1px 8px #000}.brand small{display:block;margin-top:5px;color:#bacac5;font-size:.58rem;font-weight:500;letter-spacing:.13em}
-    .stats{display:flex;gap:8px}.stat{min-width:91px;padding:8px 11px;border:1px solid #ffffff25;border-radius:10px;background:#0710158a;backdrop-filter:blur(9px);text-align:center;box-shadow:0 5px 20px #0002}.stat span{display:block;color:#adbfbb;font-size:.58rem;letter-spacing:.14em}.stat strong{display:block;margin-top:3px;font-size:1rem;font-weight:650;font-variant-numeric:tabular-nums}.stat small{display:block;margin-top:2px;color:#b8c5c3;font-size:.55rem;letter-spacing:.08em;font-variant-numeric:tabular-nums}
-    .gear-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;pointer-events:auto}.gear-control strong{min-width:14px;margin:0}.gear-control button{width:44px;height:44px;padding:0;border:1px solid #ffffff35;border-radius:8px;background:#ffffff18;color:#fff;font:700 1.05rem "Segoe UI",sans-serif;cursor:pointer;touch-action:manipulation}.gear-control button:hover{background:#ffffff38}.gear-control button:active{background:#ffffff55}
+    .stats{display:flex;gap:8px;pointer-events:none}.stat{min-width:80px;padding:8px 11px;border:1px solid #ffffff25;border-radius:10px;background:#0710158a;backdrop-filter:blur(9px);text-align:center;box-shadow:0 5px 20px #0002}.stat span{display:block;color:#adbfbb;font-size:.58rem;letter-spacing:.14em}.stat strong{display:block;margin-top:3px;font-size:1rem;font-weight:650;font-variant-numeric:tabular-nums}
+    .gear-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;pointer-events:auto}.gear-control strong{min-width:14px;margin:0}.gear-control button{width:23px;height:22px;padding:0;border:1px solid #ffffff35;border-radius:6px;background:#ffffff18;color:#fff;font:700 .9rem "Segoe UI",sans-serif;cursor:pointer}.gear-control button:hover{background:#ffffff38}
+    
+    /* ===== Analog Gauges (Dashboard) ===== */
+    .dashboard{position:absolute;bottom:18px;right:22px;display:flex;gap:15px;z-index:10;pointer-events:none;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.6))}
+    .gauge{position:relative;width:120px;height:120px;background:radial-gradient(circle, #1a2225 0%, #0c1216 100%);border-radius:50%;border:3px solid #2a353b;box-shadow:inset 0 0 20px #000, 0 0 0 1px #000;transition:transform 0.2s, border-color 0.2s}
+    
+    .gauge.boost.overboost{border-color:#ff4d4d; box-shadow:inset 0 0 20px #000, 0 0 15px #ff4d4d}
+    
+    .gauge canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:default}
+    .gauge .label{position:absolute;bottom:18px;left:0;right:0;text-align:center;font-size:.55rem;color:#adbfbb;letter-spacing:.15em;font-weight:600;text-shadow:0 1px 2px #000}
+    .gauge .value{position:absolute;top:58%;left:0;right:0;text-align:center;font-size:1rem;color:var(--ice);font-weight:700;font-variant-numeric:tabular-nums;text-shadow:0 2px 4px #000}
+    .gauge .value small{font-size:.55rem;color:var(--muted);font-weight:500}
+    
     .instructions{position:absolute;left:20px;top:82px;padding:10px 13px;border:1px solid #ffffff20;border-radius:10px;background:#07101578;color:#d1ddda;font-size:.72rem;line-height:1.65;backdrop-filter:blur(8px);pointer-events:none;z-index:10}.instructions b{color:white;font-weight:650}
-    .camera-toggle{position:absolute;top:88px;right:22px;padding:10px 15px;border:1px solid #ffffff45;border-radius:10px;background:#071015b8;color:#f5f7f5;font:600 .75rem "Segoe UI",Tahoma,sans-serif;letter-spacing:.04em;cursor:pointer;backdrop-filter:blur(9px);box-shadow:0 5px 18px #0002;z-index:10;touch-action:manipulation}.camera-toggle:hover{background:#17302ecc}.camera-toggle:active{background:#2a4a46}
+    .camera-toggle{position:absolute;top:88px;right:22px;padding:10px 15px;border:1px solid #ffffff45;border-radius:10px;background:#071015b8;color:#f5f7f5;font:600 .75rem "Segoe UI",Tahoma,sans-serif;letter-spacing:.04em;cursor:pointer;backdrop-filter:blur(9px);box-shadow:0 5px 18px #0002;z-index:10}.camera-toggle:hover{background:#17302ecc}
     .message{position:absolute;left:50%;top:36%;transform:translate(-50%,-50%);text-align:center;text-shadow:0 2px 16px #000;transition:opacity .5s;pointer-events:none;z-index:10}.message strong{display:block;font-size:clamp(1.5rem,4vw,3.2rem);font-weight:600;letter-spacing:.15em}.message span{display:block;margin-top:9px;color:#e0e8e4;font-size:.85rem;letter-spacing:.06em}.message.hide{opacity:0}
-    .mobile{display:none;position:absolute;inset:auto 16px 18px;justify-content:space-between;align-items:end;pointer-events:none;z-index:20}.pad,.pedals{display:flex;gap:10px;pointer-events:auto}.touch{display:grid;place-items:center;width:60px;height:60px;border:1px solid #ffffff4a;border-radius:50%;background:#101b1dbd;color:#fff;font-size:1.35rem;user-select:none;touch-action:none;backdrop-filter:blur(8px)}.touch:active{background:#8bac9e88}.pedals .touch{width:54px;height:74px;border-radius:17px;font-size:.72rem;font-weight:750;letter-spacing:.08em}.pedals .go{border-color:#f5c47b88;background:#754a2699}.pedals .stop{border-color:#ec929288;background:#6e292999}
-    .toast{position:absolute;left:50%;top:20%;transform:translateX(-50%);padding:10px 16px;border:1px solid #ffdbb744;border-radius:9px;background:#241811a8;color:#ffe4be;font-size:.83rem;opacity:0;transition:opacity .2s;pointer-events:none;z-index:15}.toast.show{opacity:1}
-    .credit{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);color:#edf2eea8;font-size:.6rem;letter-spacing:.15em;text-shadow:0 1px 8px #000;pointer-events:none;white-space:nowrap;z-index:10}
+    
+    /* ===== Car Selector UI ===== */
+    .car-selector{position:absolute;left:20px;bottom:20px;display:flex;flex-direction:column;gap:8px;z-index:15;pointer-events:auto;transition:opacity 0.4s ease, transform 0.4s ease}
+    .car-selector.hidden { opacity: 0; pointer-events: none; transform: translateY(20px); }
+    .car-btn{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid #ffffff30;border-radius:12px;background:#071015c8;color:#e1ece8;font:600 .75rem "Segoe UI",sans-serif;cursor:pointer;backdrop-filter:blur(10px);transition:all 0.2s;text-align:left}
+    .car-btn:hover{background:#17302ecc;transform:translateX(4px)}
+    .car-btn.active{border-color:#ffdd88;background:#17302ecc;box-shadow:0 0 12px #ffdd8833}
+    .car-btn .swatch{width:20px;height:20px;border-radius:50%;border:2px solid #ffffff50;flex-shrink:0}
+    .car-btn .info{display:flex;flex-direction:column;gap:2px}
+    .car-btn .name{font-size:.8rem;font-weight:700}
+    .car-btn .spec{font-size:.6rem;color:#a8b6b5;letter-spacing:.05em}
 
-    /* ===== มือถือ/แท็บเล็ต (ทุกทิศทาง) — pointer/hover detection ===== */
-    @media (pointer: coarse), (hover: none) {
-      .mobile { display: flex; }
-      .instructions { top: auto; bottom: 120px; left: 14px; font-size: .66rem; }
-      .camera-toggle { top: 76px; right: 13px; padding: 9px 12px; }
-      .stat { min-width: 68px; padding: 7px; }
-      .top { padding: 13px; }
-      .brand { font-size: .62rem; }
-      .stat span { font-size: .52rem; }
-      .stat strong { font-size: .88rem; }
-      .credit { display: none; }
+    /* Mobile adjustments */
+    @media(max-width:700px){
+      .instructions{top:auto;bottom:110px;left:14px;font-size:.66rem}
+      .camera-toggle{top:76px;right:13px;padding:9px 12px}
+      .stat{min-width:68px;padding:7px}
+      .top{padding:13px}
+      .brand{font-size:.62rem}
+      .stat span{font-size:.52rem}
+      .stat strong{font-size:.88rem}
+      .credit{display:none}
+      
+      .dashboard{bottom:105px;right:14px;gap:10px;transform:scale(0.8);transform-origin: bottom right;}
+      .gauge{width:100px;height:100px}
+      .gauge .value{top:60%;font-size:.9rem}
+      .gauge .label{bottom:15px;font-size:.45rem}
+      
+      .car-selector{left:10px;bottom:220px;gap:6px;transform:scale(0.9);transform-origin: bottom left;}
+      .car-btn{padding:6px 10px;gap:8px}
+      .car-btn .name{font-size:.7rem}
+      .car-btn .spec{font-size:.5rem}
+      .car-btn .swatch{width:16px;height:16px}
     }
-
-    /* ===== มือถือแนวนอน / จอเตี้ย ===== */
-    @media (pointer: coarse) and (max-height: 500px) {
-      .top { padding: 8px 12px; }
-      .brand { font-size: .58rem; }
-      .brand small { font-size: .5rem; }
-      .stat { min-width: 58px; padding: 5px 8px; }
-      .stat strong { font-size: .78rem; }
-      .stat span { font-size: .48rem; }
-      .stat small { font-size: .48rem; }
-      .instructions { bottom: 96px; left: 10px; padding: 6px 9px; font-size: .6rem; line-height: 1.5; max-width: 170px; }
-      .camera-toggle { top: 60px; right: 10px; padding: 7px 10px; font-size: .68rem; }
-      .gear-control button { width: 34px; height: 34px; font-size: .9rem; }
-      .mobile { inset: auto 10px 10px; }
-      .touch { width: 52px; height: 52px; }
-      .pedals .touch { width: 46px; height: 62px; }
-      .message strong { font-size: 1.2rem; }
-      .message span { font-size: .72rem; }
-    }
-
-    /* ===== จอแคบมาก (มือถือแนวตั้งจิ๋ว) ===== */
-    @media (max-width: 390px) and (pointer: coarse) {
-      .instructions { max-width: 175px; bottom: 108px; }
-      .mobile { inset: auto 11px 13px; }
-      .touch { width: 54px; height: 54px; }
-      .pedals .touch { width: 47px; height: 67px; }
-      .stats { gap: 4px; }
+    @media(max-width:390px){
+      .instructions{max-width:195px;bottom:103px}
+      .touch{width:54px;height:54px}
+      .pedals .touch{width:47px;height:67px}
+      .stats{gap:4px}
+      .dashboard{transform:scale(0.7);bottom:95px;}
+      .car-selector{bottom:200px;transform:scale(0.8);}
     }
   </style>
 </head>
 <body>
 <main id="game">
-  <div class="top"><div class="brand">EVENING DRIVE<small>OPEN ROAD · FIRST PERSON</small></div>
-    <div class="stats"><div class="stat"><span>SPEED</span><strong><b id="speed">000</b> km/h</strong><small id="rpm">RPM 0900</small></div><div class="stat"><span>GEAR</span><div class="gear-control"><button id="gearDown" type="button" aria-label="ลดเกียร์">−</button><strong id="gear">1</strong><button id="gearUp" type="button" aria-label="เพิ่มเกียร์">+</button></div></div><div class="stat"><span>DISTANCE</span><strong><b id="distance">0.00</b> km</strong></div></div>
+  <div class="top">
+    <div class="brand">EVENING DRIVE<small>OPEN ROAD · FIRST PERSON</small></div>
+    <div class="stats">
+      <div class="stat"><span>GEAR</span><div class="gear-control"><button id="gearDown" type="button" aria-label="ลดเกียร์">−</button><strong id="gear">1</strong><button id="gearUp" type="button" aria-label="เพิ่มเกียร์">+</button></div></div>
+      <div class="stat"><span>DISTANCE</span><strong><b id="distance">0.00</b> km</strong></div>
+    </div>
   </div>
+  
   <div class="instructions"><b>ขับรถ</b><br>W / ↑ เร่ง · S / ↓ เบรก<br>A D / ← → เลี้ยว · Q / E เปลี่ยนเกียร์<br><span id="cameraHint">C สลับมุม · R เริ่มใหม่</span></div>
   <button id="cameraToggle" class="camera-toggle" type="button" aria-label="สลับมุมกล้อง">มุมมอง: คนขับ</button>
   <div id="message" class="message"><strong>EVENING DRIVE</strong><span>กำลังโหลดรถ 3 มิติ…</span></div>
   <div id="toast" class="toast">ชนขอบทาง ลดความเร็วลง</div>
+  
+  <!-- ===== Dashboard มาตรวัดอนาล็อก ===== -->
+  <div class="dashboard">
+    <div class="gauge">
+      <canvas id="rpmGauge" width="240" height="240"></canvas>
+      <div class="label">x1000 RPM</div>
+      <div class="value"><span id="rpmText">0.9</span></div>
+    </div>
+    <div class="gauge">
+      <canvas id="speedGauge" width="240" height="240"></canvas>
+      <div class="label">km/h</div>
+      <div class="value"><span id="speedText">0</span></div>
+    </div>
+    <div class="gauge boost" id="boostGaugeBox">
+      <canvas id="boostGauge" width="240" height="240"></canvas>
+      <div class="label">BOOST PSI</div>
+      <div class="value"><span id="boostText">0.0</span></div>
+    </div>
+  </div>
+
+  <!-- ===== Car Selector ===== -->
+  <div class="car-selector" id="carSelector"></div>
+
   <div class="mobile"><div class="pad"><button class="touch" data-key="ArrowLeft" aria-label="เลี้ยวซ้าย">‹</button><button class="touch" data-key="ArrowRight" aria-label="เลี้ยวขวา">›</button></div><div class="pedals"><button class="touch stop" data-key="ArrowDown">เบรก</button><button class="touch go" data-key="ArrowUp">เร่ง</button></div></div>
   <div class="credit">A QUIET ROAD · TAKE IT EASY</div>
 </main>
@@ -92,11 +121,117 @@
 (() => {
   const THREE = window.THREE;
   const root = document.querySelector("#game");
-  const speedText = document.querySelector("#speed"), distanceText = document.querySelector("#distance"), gearText = document.querySelector("#gear"), rpmText=document.querySelector("#rpm");
+  
+  const speedText = document.querySelector("#speedText"); 
+  const distanceText = document.querySelector("#distance"); 
+  const gearText = document.querySelector("#gear"); 
+  const rpmText = document.querySelector("#rpmText");
+  const boostText = document.querySelector("#boostText");
+  const boostGaugeBox = document.querySelector("#boostGaugeBox");
   const message = document.querySelector("#message"), toast = document.querySelector("#toast");
+  const carSelector = document.querySelector("#carSelector");
+
+  const CAR_SPECS = [
+    { name: "Classic Blue",   color: 0x4a90d9, swatch: "#4a90d9", maxSpeed: 710, gearSpeed: [0,110,240,360,480,580,710], accel: [0,82,64,49,38,30,24] },
+    { name: "Midnight Black", color: 0x1a1c1f, swatch: "#1a1c1f", maxSpeed: 750, gearSpeed: [0,120,260,390,510,620,750], accel: [0,95,72,55,42,33,26] },
+    { name: "Racing Red",     color: 0xd91a1a, swatch: "#d91a1a", maxSpeed: 820, gearSpeed: [0,130,280,420,560,680,820], accel: [0,88,68,52,40,32,25] },
+    { name: "Acid Green",     color: 0x8cd91a, swatch: "#8cd91a", maxSpeed: 680, gearSpeed: [0,100,220,340,460,560,680], accel: [0,100,80,62,48,38,30] },
+    { name: "Phantom Silver", color: 0xc0c8d0, swatch: "#c0c8d0", maxSpeed: 780, gearSpeed: [0,125,270,405,540,660,780], accel: [0,90,70,54,41,33,26] }
+  ];
+  let currentCarSpec = CAR_SPECS[0];
+  let currentCarIndex = 0;
+  let hasStartedMoving = false;
+  
+  const speedGauge = document.getElementById('speedGauge');
+  const rpmGauge = document.getElementById('rpmGauge');
+  const boostGauge = document.getElementById('boostGauge');
+  const ctxSpeed = speedGauge.getContext('2d');
+  const ctxRpm = rpmGauge.getContext('2d');
+  const ctxBoost = boostGauge.getContext('2d');
+
   const held = new Set();
+
+  function drawGauge(ctx, val, min, max, redlineStart, redlineEnd) {
+    const w = ctx.canvas.width, h = ctx.canvas.height;
+    const cx = w/2, cy = h/2, r = w/2 - 18;
+    ctx.clearRect(0,0,w,h);
+
+    const startAngle = Math.PI * 0.75; 
+    const endAngle = Math.PI * 2.25;
+    const angleRange = endAngle - startAngle;
+    const range = max - min;
+
+    if (redlineStart !== undefined && redlineEnd !== undefined) {
+      const a1 = startAngle + angleRange * ((redlineStart - min) / range);
+      const a2 = startAngle + angleRange * ((redlineEnd - min) / range);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 4, a1, a2);
+      ctx.strokeStyle = 'rgba(255, 60, 60, 0.4)';
+      ctx.lineWidth = 6;
+      ctx.stroke();
+    }
+
+    const numTicks = 10;
+    for (let i = 0; i <= numTicks; i++) {
+      const angle = startAngle + (i / numTicks) * angleRange;
+      const isMajor = i % 2 === 0;
+      const tickLen = isMajor ? 14 : 7;
+      const tx1 = cx + Math.cos(angle) * (r - 2);
+      const ty1 = cy + Math.sin(angle) * (r - 2);
+      const tx2 = cx + Math.cos(angle) * (r - 2 - tickLen);
+      const ty2 = cy + Math.sin(angle) * (r - 2 - tickLen);
+      
+      ctx.beginPath();
+      ctx.moveTo(tx1, ty1); 
+      ctx.lineTo(tx2, ty2);
+      ctx.strokeStyle = isMajor ? '#e1ece8' : '#6b7a80';
+      ctx.lineWidth = isMajor ? 3 : 1.5;
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = '#adbfbb';
+    ctx.font = 'bold 20px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center'; 
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= numTicks; i+=2) {
+      const angle = startAngle + (i / numTicks) * angleRange;
+      const tx = cx + Math.cos(angle) * (r - 32);
+      const ty = cy + Math.sin(angle) * (r - 32);
+      const label = Math.round(min + (i / numTicks) * range);
+      ctx.fillText(label, tx, ty);
+    }
+
+    const currentVal = Math.min(Math.max(val, min), max);
+    const needleAngle = startAngle + ((currentVal - min) / range) * angleRange;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(needleAngle);
+    ctx.beginPath();
+    ctx.moveTo(-8, 0); 
+    ctx.lineTo(r - 18, 0);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ff4d4d';
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+    ctx.fillStyle = '#1a2225';
+    ctx.fill();
+    ctx.strokeStyle = '#e1ece8';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff4d4d';
+    ctx.fill();
+  }
+
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0xc9c8bb, 0.00125);
+  scene.fog = new THREE.FogExp2(0x9da8b5, 0.001);
   const camera = new THREE.PerspectiveCamera(76, innerWidth/innerHeight, .1, 4500);
   const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:"high-performance"});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
@@ -117,42 +252,40 @@
     for(let i=0;i<density;i++){g.globalAlpha=Math.random()*.14;g.fillStyle=Math.random()>.5?fleck:"#111719";const s=Math.random()*2+0.4;g.fillRect(Math.random()*size,Math.random()*size,s,s)}
     g.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;return t;
   }
-  const textureLoader=new THREE.TextureLoader();
-  const asphaltFallback=noiseTexture("#292e30","#777a75",512,24000);asphaltFallback.wrapS=asphaltFallback.wrapT=THREE.RepeatWrapping;asphaltFallback.repeat.set(1,1);asphaltFallback.encoding=THREE.sRGBEncoding;
-  const grassFallback=noiseTexture("#34432f","#829052",512,18000);grassFallback.wrapS=grassFallback.wrapT=THREE.RepeatWrapping;grassFallback.repeat.set(80,220);grassFallback.encoding=THREE.sRGBEncoding;
-  const roadMat=new THREE.MeshStandardMaterial({map:asphaltFallback,color:0xffffff,roughness:.96});
+  
+  // ใช้ Canvas Texture แทนการโหลดไฟล์ภายนอกทั้งหมด (แก้ปัญหา CORS)
+  const asphaltFallback=noiseTexture("#1f2326","#5c6164",512,24000);
+  asphaltFallback.wrapS=asphaltFallback.wrapT=THREE.RepeatWrapping;asphaltFallback.repeat.set(1,1);asphaltFallback.encoding=THREE.sRGBEncoding;
+  
+  const grassFallback=noiseTexture("#3b4246","#6e7579",512,18000);
+  grassFallback.wrapS=grassFallback.wrapT=THREE.RepeatWrapping;grassFallback.repeat.set(80,220);grassFallback.encoding=THREE.sRGBEncoding;
+  
+  const roadMat=new THREE.MeshStandardMaterial({map:asphaltFallback,color:0xffffff,roughness:.92});
   const grassMat=new THREE.MeshStandardMaterial({map:grassFallback,color:0xffffff,roughness:1});
-  function swapTexture(path,repeat,apply,color=false){textureLoader.load(path,texture=>{texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.copy(repeat);texture.anisotropy=8;if(color)texture.encoding=THREE.sRGBEncoding;apply(texture)},undefined,()=>{});}
-  swapTexture("./assets/asphalt-diff.jpg",new THREE.Vector2(1,1),texture=>{roadMat.map=texture;roadMat.needsUpdate=true},true);
-  swapTexture("./assets/asphalt-normal.jpg",new THREE.Vector2(1,1),texture=>{roadMat.normalMap=texture;roadMat.normalScale.set(.24,.24);roadMat.needsUpdate=true});
-  swapTexture("./assets/asphalt-rough.jpg",new THREE.Vector2(1,1),texture=>{roadMat.roughnessMap=texture;roadMat.needsUpdate=true});
-  swapTexture("./assets/grass-diff.jpg",new THREE.Vector2(80,220),texture=>{grassMat.map=texture;grassMat.needsUpdate=true},true);
+  
   const whiteMat=new THREE.MeshStandardMaterial({color:0xe6e1d1,roughness:.76});
   const yellowMat=new THREE.MeshStandardMaterial({color:0xe0bd72,roughness:.8});
-  const railMat=new THREE.MeshStandardMaterial({color:0x8a8b82,metalness:.55,roughness:.47});
+  const barrierMat=new THREE.MeshStandardMaterial({color:0x9e9e9e,metalness:.1,roughness:.8});
 
   const skyCanvas=document.createElement("canvas");skyCanvas.width=1024;skyCanvas.height=512;const sg=skyCanvas.getContext("2d");
-  const skyGrad=sg.createLinearGradient(0,0,0,512);skyGrad.addColorStop(0,"#526e88");skyGrad.addColorStop(.48,"#b2b4ac");skyGrad.addColorStop(.78,"#e5bd99");skyGrad.addColorStop(1,"#dfb48b");sg.fillStyle=skyGrad;sg.fillRect(0,0,1024,512);
+  const skyGrad=sg.createLinearGradient(0,0,0,512);skyGrad.addColorStop(0,"#3b4d61");skyGrad.addColorStop(.4,"#8b95a1");skyGrad.addColorStop(.7,"#d9b592");skyGrad.addColorStop(1,"#e8c8a8");sg.fillStyle=skyGrad;sg.fillRect(0,0,1024,512);
   for(let i=0;i<34;i++){const x=Math.random()*1024,y=60+Math.random()*210,r=18+Math.random()*70;const cloud=sg.createRadialGradient(x,y,1,x,y,r);cloud.addColorStop(0,"#f5e9d44a");cloud.addColorStop(1,"#f5e9d400");sg.fillStyle=cloud;sg.fillRect(x-r,y-r,r*2,r*2)}
   const skyTex=new THREE.CanvasTexture(skyCanvas);skyTex.mapping=THREE.EquirectangularReflectionMapping;skyTex.encoding=THREE.sRGBEncoding;scene.background=skyTex;scene.environment=skyTex;
-  textureLoader.load("./assets/autumn-road-panorama.jpg",panorama=>{panorama.mapping=THREE.EquirectangularReflectionMapping;panorama.encoding=THREE.sRGBEncoding;panorama.magFilter=THREE.LinearFilter;panorama.minFilter=THREE.LinearMipmapLinearFilter;scene.background=panorama;scene.environment=panorama},undefined,error=>console.error("Could not load the panorama",error));
+  
   const world=new THREE.Group();scene.add(world);
 
-  const roadLength=4200, roadWidth=14, segment=14;
-  function centerX(z){return 24*Math.sin(z*Math.PI*4/roadLength)+8*Math.sin(z*Math.PI*10/roadLength+1.2)}
+  const roadLength=4200, roadWidth=24, segment=14;
+  function centerX(z){return 0;}
   const groundLength=roadLength,groundOffset=-groundLength/2;
-  function terrainHeight(x,z,cx){
-    const distance=Math.abs(x-cx);
-    const foothills=THREE.MathUtils.smoothstep(distance,58,250);
-    const ridge=25+19*Math.sin(z*.0028+x*.0021)+12*Math.sin(z*.0065-x*.0047)+7*Math.sin(x*.014+z*.011);
-    const rolling=Math.sin(z*.008+x*.004)*.45+Math.sin(z*.002-x*.002)*.7;
-    return -.24+foothills*(Math.max(3,ridge)+rolling);
-  }
+  
+  function terrainHeight(x,z,cx){ return -0.5; }
+  
   const terrainGeo=new THREE.PlaneGeometry(1800,groundLength,80,220);terrainGeo.rotateX(-Math.PI/2);
   const pos=terrainGeo.attributes.position;
   for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i)+groundOffset;pos.setY(i,terrainHeight(x,z,centerX(z)))}
   terrainGeo.computeVertexNormals();const terrain=new THREE.Mesh(terrainGeo,grassMat);terrain.position.z=groundOffset;terrain.receiveShadow=true;world.add(terrain);
-  const roadVerts=[],roadUvs=[],roadIdx=[],shoulderVerts=[],shoulderIdx=[];
+  
+  const roadVerts=[],roadUvs=[],roadIdx=[];
   const segments=Math.ceil(roadLength/segment);
   for(let i=0;i<=segments;i++){
     const z=-i*segment,cx=centerX(z),prev=centerX(z-1),next=centerX(z+1),dx=next-prev,len=Math.hypot(dx,2),nx=2/len,nz=-dx/len;
@@ -166,11 +299,20 @@
     for(let i=0;i<=steps;i++){const z=z0-i*(length/steps),cx=centerX(z),dx=centerX(z+1)-centerX(z-1),ll=Math.hypot(dx,2),nx=2/ll,nz=-dx/ll;for(const side of [-1,1])verts.push(cx+nx*(offset+side*width/2),y,z+nz*(offset+side*width/2));if(i<steps){const a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2)}}
     const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.Float32BufferAttribute(verts,3));geo.setIndex(idx);geo.computeVertexNormals();const m=new THREE.Mesh(geo,material);m.receiveShadow=true;world.add(m);return m;
   }
+  
   const roadEdgeLine=roadWidth*.5-.25;
-  stripeMesh(0,roadLength, .14,-roadEdgeLine,whiteMat,.11);stripeMesh(0,roadLength,.14,roadEdgeLine,whiteMat,.11);
-  stripeMesh(0,roadLength,.12,0,yellowMat,.105);
-  stripeMesh(0,roadLength,.11,-(roadEdgeLine-.45),whiteMat,.11);stripeMesh(0,roadLength,.11,roadEdgeLine-.45,whiteMat,.11);
-  const dashes=[];for(let z=-14;z>-roadLength;z-=68){const dash=stripeMesh(z,23,.13,0,whiteMat,.115);dashes.push({mesh:dash,z})}
+  stripeMesh(0,roadLength, .15,-roadEdgeLine,whiteMat,.11);
+  stripeMesh(0,roadLength, .15, roadEdgeLine,whiteMat,.11);
+  stripeMesh(0,roadLength, .1, -0.2, yellowMat,.105);
+  stripeMesh(0,roadLength, .1,  0.2, yellowMat,.105);
+  stripeMesh(0,roadLength, .12, -roadWidth*.25, whiteMat,.11);
+  stripeMesh(0,roadLength, .12,  roadWidth*.25, whiteMat,.11);
+  
+  const dashes=[];for(let z=-14;z>-roadLength;z-=68){
+    const dash1=stripeMesh(z,23,.13,-roadWidth*.25,whiteMat,.115);
+    const dash2=stripeMesh(z,23,.13, roadWidth*.25,whiteMat,.115);
+    dashes.push({mesh:dash1,z},{mesh:dash2,z});
+  }
 
   function addInstancedRoadside(geometry,material,records,withColors=false){
     const mesh=new THREE.InstancedMesh(geometry,material,records.length),dummy=new THREE.Object3D();
@@ -180,44 +322,38 @@
     }
     mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;mesh.castShadow=false;mesh.receiveShadow=true;world.add(mesh);return mesh;
   }
-  const railBeamRecords=[],railPostRecords=[],reflectorRecords=[];
-  const railSpacing=7,railCount=Math.ceil(roadLength/railSpacing);
-  for(let i=0;i<railCount;i++){
-    const z=-i*railSpacing-railSpacing*.5,cx=centerX(z),dx=centerX(z-1)-centerX(z+1),len=Math.hypot(dx,2),nx=2/len,nz=dx/len,angle=Math.atan2(-dx,2);
-    for(const side of [-1,1]){
-      const x=cx+nx*(roadWidth*.5+1.8)*side,rz=z+nz*(roadWidth*.5+1.8)*side;
-      railBeamRecords.push({x,y:.94,z:rz,ry:angle,sx:1,sy:1,sz:railSpacing+.25});
-      if(i%2===0)railPostRecords.push({x,y:.42,z:rz,ry:angle,sx:1,sy:1.25,sz:1});
-      if(i%4===0)reflectorRecords.push({x:x-side*.045,y:1.04,z:rz,ry:angle,sx:1,sy:1,sz:1,color:new THREE.Color().setHSL(.12,.22,.72)});
-    }
-  }
-  addInstancedRoadside(new THREE.BoxGeometry(.13,.18,1),railMat,railBeamRecords);
-  addInstancedRoadside(new THREE.BoxGeometry(.10,.72,.10),railMat,railPostRecords);
-  addInstancedRoadside(new THREE.BoxGeometry(.035,.14,.045),new THREE.MeshStandardMaterial({color:0xf1e5c7,emissive:0x34291b,roughness:.38}),reflectorRecords);
 
-  const treeRecords=[],trunkRecords=[];
-  let seed=39107;function random01(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
-  for(let z=-24;z>-roadLength;z-=27){
+  const barrierRecords=[], reflectorRecords=[];
+  const barrierSpacing=10, barrierCount=Math.ceil(roadLength/barrierSpacing);
+  for(let i=0;i<barrierCount;i++){
+    const z=-i*barrierSpacing-barrierSpacing*.5;
     for(const side of [-1,1]){
-      const treeZ=z-random01()*10,roadX=centerX(treeZ),offset=roadWidth*.5+17+random01()*72,x=roadX+side*offset;
-      const groundY=terrainHeight(x,treeZ,roadX),height=9+random01()*12,radius=2.8+random01()*2.8;
-      const tint=new THREE.Color().setHSL(.25+random01()*.07,.30+random01()*.20,.19+random01()*.10);
-      treeRecords.push({x,y:groundY+height*.56,z:treeZ,sx:radius,sy:height*.88,sz:radius,rx:(random01()-.5)*.08,rz:(random01()-.5)*.08,color:tint});
-      const trunkHeight=height*.32;trunkRecords.push({x,y:groundY+trunkHeight*.5,z:treeZ,sx:.16+radius*.045,sy:trunkHeight,sz:.16+radius*.045,color:new THREE.Color(0x594839)});
+      const x=side*(roadWidth*.5+1.5);
+      barrierRecords.push({x,y:0.45,z:z,sx:1,sy:1,sz:barrierSpacing+.2});
+      if(i%3===0){
+        reflectorRecords.push({x:x-side*0.1,y:0.8,z:z,sx:1,sy:1,sz:1,color:new THREE.Color().setHSL(.05,.9,.6)});
+      }
     }
   }
-  for(let z=-38;z>-roadLength;z-=46){
+  addInstancedRoadside(new THREE.BoxGeometry(0.6, 0.9, 1), barrierMat, barrierRecords);
+  addInstancedRoadside(new THREE.BoxGeometry(0.05, 0.15, 0.15), new THREE.MeshStandardMaterial({color:0xffaa00, emissive:0x442200, roughness:.4}), reflectorRecords);
+
+  const poleRecords=[], armRecords=[], lampRecords=[], lightGlowRecords=[];
+  const poleSpacing=40, poleCount=Math.ceil(roadLength/poleSpacing);
+  for(let i=0;i<poleCount;i++){
+    const z=-i*poleSpacing-poleSpacing*.5;
     for(const side of [-1,1]){
-      const treeZ=z-random01()*18,roadX=centerX(treeZ),offset=105+random01()*150,x=roadX+side*offset;
-      const groundY=terrainHeight(x,treeZ,roadX),height=14+random01()*20,radius=4+random01()*5;
-      const tint=new THREE.Color().setHSL(.25+random01()*.08,.28+random01()*.18,.17+random01()*.10);
-      treeRecords.push({x,y:groundY+height*.56,z:treeZ,sx:radius,sy:height*.88,sz:radius,rx:(random01()-.5)*.08,rz:(random01()-.5)*.08,color:tint});
-      const trunkHeight=height*.32;trunkRecords.push({x,y:groundY+trunkHeight*.5,z:treeZ,sx:.19+radius*.04,sy:trunkHeight,sz:.19+radius*.04,color:new THREE.Color(0x554536)});
+      const x=side*(roadWidth*.5+2.5);
+      poleRecords.push({x,y:4,z:z,sx:1,sy:1,sz:1});
+      armRecords.push({x:x-side*1.5,y:8,z:z,sx:1,sy:1,sz:1});
+      lampRecords.push({x:x-side*3,y:7.8,z:z,sx:1,sy:1,sz:1});
+      lightGlowRecords.push({x:x-side*3,y:7.8,z:z,sx:1,sy:1,sz:1,color:new THREE.Color(0xffdd88)});
     }
   }
-  const treeMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:1});
-  addInstancedRoadside(new THREE.ConeGeometry(1,1,9,2),treeMaterial,treeRecords,true);
-  addInstancedRoadside(new THREE.CylinderGeometry(.75,.95,1,7),new THREE.MeshStandardMaterial({color:0xffffff,roughness:1}),trunkRecords,true);
+  addInstancedRoadside(new THREE.CylinderGeometry(0.15,0.2,8,8), new THREE.MeshStandardMaterial({color:0x555555,metalness:.8,roughness:.4}), poleRecords);
+  addInstancedRoadside(new THREE.BoxGeometry(3,0.15,0.15), new THREE.MeshStandardMaterial({color:0x555555,metalness:.8,roughness:.4}), armRecords);
+  addInstancedRoadside(new THREE.BoxGeometry(0.6,0.2,0.4), new THREE.MeshStandardMaterial({color:0x222222,metalness:.5,roughness:.6}), lampRecords);
+  addInstancedRoadside(new THREE.BoxGeometry(0.5,0.05,0.3), new THREE.MeshStandardMaterial({color:0xffeeaa, emissive:0xffcc44, emissiveIntensity:2, roughness:.2}), lightGlowRecords);
 
   const trackA=world;
   const trackB=world.clone(true);
@@ -231,17 +367,94 @@
   let wheelSpin=0,wheelAnimations=[],steeringWheelRig=null,steeringWheelBase=null,steeringWheelLogo=null;
   const brakeLightMaterials=[],brakePointLights=[];
   let brakeState=false,audioContext=null,engineOscillator=null,engineHarmonic=null,engineFilter=null,engineGain=null,lastEngineAudioUpdate=0;
+
+  // ===== ระบบไฟออกท่อ (Exhaust Flame) =====
+  const exhaustFlames=[];            
+  const exhaustPoints=[];            
+  const flameMaterialBase=new THREE.MeshBasicMaterial({
+    color:0xffaa33, transparent:true, opacity:0.95,
+    blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide
+  });
+  let flameCooldown=0;               
+
+  function spawnExhaustFlame(intensity=1){
+    if(!playerCar) return;
+    
+    if(exhaustPoints.length===0){
+      playerCar.updateWorldMatrix(true,true);
+      const tailGroup=playerCar.getObjectByName("Taillights");
+      let baseZ = -2.05; 
+      let baseY = 0.32; 
+      
+      if(tailGroup){
+        const tailBounds=new THREE.Box3().setFromObject(tailGroup).applyMatrix4(playerCar.matrixWorld.clone().invert());
+        baseZ = tailBounds.min.z - 0.05; 
+        baseY = tailBounds.min.y - 0.35; 
+      }
+      
+      exhaustPoints.push(
+        new THREE.Vector3(-0.42, baseY, baseZ),
+        new THREE.Vector3( 0.42, baseY, baseZ)
+      );
+    }
+    
+    for(const origin of exhaustPoints){
+      const geo=new THREE.ConeGeometry(0.10*intensity, 0.42*intensity, 8, 1, true);
+      geo.rotateX(-Math.PI / 2); 
+      geo.translate(0, 0, -0.21 * intensity);
+      
+      const mat=flameMaterialBase.clone();
+      mat.color.setHSL(0.08 + Math.random()*0.04, 1, 0.6);
+      const mesh=new THREE.Mesh(geo,mat);
+      mesh.position.copy(origin);
+      mesh.rotation.z=(Math.random()-0.5)*0.15;
+      mesh.rotation.x=(Math.random()-0.5)*0.1;
+      
+      playerCar.add(mesh);
+      
+      const light=new THREE.PointLight(0xff7722, 0, 3.5, 2);
+      light.position.copy(origin).add(new THREE.Vector3(0,0,-0.25));
+      playerCar.add(light);
+      
+      const maxLife=0.16 + Math.random()*0.10;
+      exhaustFlames.push({ mesh, light, life:maxLife, maxLife });
+    }
+  }
+
+  function updateExhaustFlames(dt){
+    if(flameCooldown>0) flameCooldown-=dt;
+    for(let i=exhaustFlames.length-1;i>=0;i--){
+      const f=exhaustFlames[i];
+      f.life-=dt;
+      if(f.life<=0){
+        f.mesh.parent && f.mesh.parent.remove(f.mesh);
+        f.mesh.geometry.dispose();
+        f.mesh.material.dispose();
+        f.light.parent && f.light.parent.remove(f.light);
+        exhaustFlames.splice(i,1);
+        continue;
+      }
+      const t=f.life/f.maxLife;          
+      f.mesh.material.opacity=0.95*t;
+      const s=1+(1-t)*0.6;               
+      f.mesh.scale.set(s,s,s);
+      f.mesh.position.z -= dt*1.8;       
+      f.light.intensity=3.0*t;
+      f.light.position.copy(f.mesh.position).add(new THREE.Vector3(0,0,-0.25));
+    }
+  }
+
   function startEngineAudio(){
     const AudioContextClass=window.AudioContext||window.webkitAudioContext;
     if(!AudioContextClass)return;
     if(!audioContext){
       try{
         audioContext=new AudioContextClass();
-        engineFilter=audioContext.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=650;engineFilter.Q.value=.8;
+        engineFilter=audioContext.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=2500;engineFilter.Q.value=3.5;
         engineGain=audioContext.createGain();engineGain.gain.value=.0001;engineFilter.connect(engineGain);engineGain.connect(audioContext.destination);
-        engineOscillator=audioContext.createOscillator();engineOscillator.type="sawtooth";engineOscillator.frequency.value=48;engineOscillator.connect(engineFilter);engineOscillator.start();
-        engineHarmonic=audioContext.createOscillator();engineHarmonic.type="triangle";engineHarmonic.frequency.value=96;
-        const harmonicGain=audioContext.createGain();harmonicGain.gain.value=.19;engineHarmonic.connect(harmonicGain);harmonicGain.connect(engineFilter);engineHarmonic.start();
+        engineOscillator=audioContext.createOscillator();engineOscillator.type="sawtooth";engineOscillator.frequency.value=50;engineOscillator.connect(engineFilter);engineOscillator.start();
+        engineHarmonic=audioContext.createOscillator();engineHarmonic.type="sine";engineHarmonic.frequency.value=150;
+        const harmonicGain=audioContext.createGain();harmonicGain.gain.value=.35;engineHarmonic.connect(harmonicGain);harmonicGain.connect(engineFilter);engineHarmonic.start();
       }catch(error){console.warn("Engine audio is unavailable",error);audioContext=null;return}
     }
     if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
@@ -267,8 +480,8 @@
     const driver=cameraMode==="driver";
     camera.fov=driver?76:58;camera.updateProjectionMatrix();
     if(driver){camera.position.set(.38,1.02,-.38);camera.rotation.set(0,Math.PI,0)}else updateChaseCamera();
-    cameraToggle.textContent=driver?"มุมมอง: คนขับ":"มุมมอง: รอบรถ";
-    cameraToggle.setAttribute("aria-label",driver?"เปลี่ยนเป็นมุมมองรอบรถ":"เปลี่ยนเป็นมุมมองคนขับ");
+    cameraToggle.textContent=driver?"มุมมอง: คนขับ":"มุมมอง: รถ";
+    cameraToggle.setAttribute("aria-label",driver?"เปลี่ยนเป็นมุมมองรถ":"เปลี่ยนเป็นมุมมองคนขับ");
     cameraHint.textContent=driver?"C สลับมุม · R เริ่มใหม่":"ลากเมาส์/นิ้วเพื่อหมุน · ล้อเมาส์ซูม";
     driverHiddenParts.forEach(part=>part.visible=!driver);
   }
@@ -290,10 +503,83 @@
   let vehicleTemplate=null;
   const vehicleLoader=new THREE.GLTFLoader();
   const porscheBinary=Uint8Array.from(atob(window.PORSCHE_GLB_DATA),ch=>ch.charCodeAt(0)).buffer;
+  
+  let carBodyMaterials = [];
+
+  function buildCarSelector(){
+    carSelector.innerHTML = '';
+    CAR_SPECS.forEach((spec, index) => {
+      const btn = document.createElement('button');
+      btn.className = `car-btn ${index === currentCarIndex ? 'active' : ''}`;
+      btn.innerHTML = `
+        <div class="swatch" style="background:${spec.swatch}"></div>
+        <div class="info">
+          <div class="name">${spec.name}</div>
+          <div class="spec">Top ${spec.maxSpeed} km/h</div>
+        </div>
+      `;
+      btn.addEventListener('click', () => selectCar(index));
+      carSelector.appendChild(btn);
+    });
+  }
+
+  function selectCar(index) {
+    if (hasStartedMoving) return;
+    if (!playerCar) return;
+    
+    currentCarIndex = index;
+    currentCarSpec = CAR_SPECS[index];
+    
+    document.querySelectorAll('.car-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', i === index);
+    });
+
+    carBodyMaterials.forEach(mat => {
+      mat.color.setHex(currentCarSpec.color);
+      mat.needsUpdate = true;
+    });
+
+    speed = 0;
+    gear = 1;
+    gearText.textContent = '1';
+    neutralRev = 0;
+    boost = 0;
+
+    toast.textContent = `เปลี่ยนเป็น ${currentCarSpec.name}`;
+    toast.classList.add("show");
+    toastTime = 1.5;
+  }
+
+  buildCarSelector();
+
   vehicleLoader.parse(porscheBinary,"",gltf=>{
     vehicleTemplate=gltf.scene;
     vehicleTemplate.traverse(object=>{if(object.isMesh){object.castShadow=true;object.receiveShadow=true}});
     playerCar=vehicleTemplate.clone(true);playerRig.add(playerCar);
+    
+    carBodyMaterials = [];
+    playerCar.traverse(object=>{
+      if(object.isMesh){
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach(mat => {
+          if (mat.name && (mat.name.includes("Main") || mat.name.includes("Body") || mat.name.includes("Paint"))) {
+            carBodyMaterials.push(mat);
+          } else if (!mat.name && mat.color && mat.color.getHex() !== 0x000000 && object.name.toLowerCase().includes('body')) {
+            carBodyMaterials.push(mat);
+          }
+        });
+      }
+    });
+    
+    if (carBodyMaterials.length === 0) {
+      playerCar.traverse(object => {
+        if (object.isMesh && object.name.includes("Main_body")) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          carBodyMaterials.push(...materials);
+        }
+      });
+    }
+
     playerCar.traverse(object=>{
       if(/Main_body|Body_Paint|Tire|(?:RL|FL|FR|RR)_wheel|Fender|Mirror|Hood|Bonnet|Wing|Spoiler|bumper|Headlight|Taillight|Windshield|Windows|Window_circuit|Sunroof|glass|Exhaust|Blinker/i.test(object.name)){
         driverHiddenParts.push(object);object.visible=false;
@@ -393,34 +679,136 @@
         }else{steeringWheelRig=null;console.warn("Could not remove the original steering wheel from the interior mesh")}
       }
     }
+    
+    selectCar(0);
     applyCameraMode();
     message.querySelector("span").textContent="กด W หรือ ↑ เพื่อออกเดินทาง";
   },error=>{
     console.error("Could not load the car model",error);
     message.querySelector("span").textContent="โหลดโมเดล Porsche ไม่สำเร็จ ลองเปิดไฟล์ใหม่อีกครั้ง";
   });
+
   let speed=0,dist=0,offset=0,steer=0,worldZ=0,elapsed=0,last=performance.now(),toastTime=0,started=false,gear=1;
-  const maxSpeed=510;
-  const gearSpeed=[0,85,160,245,340,430,maxSpeed];
-  const gearAcceleration=[0,82,64,49,38,30,24];
-  function changeGear(amount){gear=THREE.MathUtils.clamp(gear+amount,1,6);gearText.textContent=String(gear)}
+  let neutralRev=0;                 
+  let boost = 0; 
+  const neutralRevMax=7200;         
+  const reverseMaxSpeed=60;
+  const reverseAcceleration=30;
+  
+  function getMaxSpeed() { return currentCarSpec.maxSpeed || 710; }
+  function getGearSpeed(g) { 
+    if (g < 1) return currentCarSpec.maxSpeed || 710; 
+    return currentCarSpec.gearSpeed[g] || currentCarSpec.maxSpeed || 710; 
+  }
+  function getGearAcceleration(g) { 
+    if (g < 1) return 24; 
+    return currentCarSpec.accel[g] || 24; 
+  }
+
+  function gearLabel(g){ return g===-1?"R":g===0?"N":String(g) }
+  
+  function changeGear(amount){
+    const oldGear = gear;
+    gear = THREE.MathUtils.clamp(gear + amount, -1, 6);
+    if (gear !== 0) neutralRev = 0;      
+    gearText.textContent = gearLabel(gear);
+
+    // 🔥 จังหวะลดเกียร์ (Downshift) และความเร็วสูง -> ไฟปะทุออกท่อ (Shift Pop)
+    if (oldGear > 0 && gear > 0 && gear < oldGear) {
+      if (speed > 80) {
+        spawnExhaustFlame(1.0 + Math.random() * 0.6);
+        flameCooldown = 0.15;
+        boost = Math.min(25, boost + 6); // เติมบูสต์ให้ต่อเนื่อง
+      }
+    }
+  }
   document.querySelector("#gearDown").addEventListener("click",()=>changeGear(-1));
   document.querySelector("#gearUp").addEventListener("click",()=>changeGear(1));
   function showToast(){toast.classList.add("show");toastTime=1.1}
+
   function update(dt){
     const gas=held.has("ArrowUp")||held.has("w")||held.has("W");const brake=held.has("ArrowDown")||held.has("s")||held.has("S");
     const left=held.has("ArrowLeft")||held.has("a")||held.has("A");const right=held.has("ArrowRight")||held.has("d")||held.has("D");
-    const gearOverspeed=Math.max(0,speed-gearSpeed[gear]);
-    if(gearOverspeed>0)speed=Math.max(gearSpeed[gear],speed-Math.min(72,gearOverspeed*1.8)*dt);
-    if(gas){started=true;if(speed<gearSpeed[gear])speed=Math.min(gearSpeed[gear],speed+gearAcceleration[gear]*dt)}else speed=Math.max(0,speed-(brake?100:8)*dt);
-    if(brake)speed=Math.max(0,speed-83*dt);
+
+    let targetBoost = 0;
+    if (gear > 0) {
+      if (gas) {
+        const baseRpm = 900 + Math.min(1, speed/getGearSpeed(gear)) * 9100;
+        const rpmRatio = baseRpm / 9000;
+        const speedRatio = Math.abs(speed) / getMaxSpeed();
+        targetBoost = (5 + rpmRatio * 10) + (speedRatio * 5);
+      } else {
+        targetBoost = -5; 
+      }
+    } else {
+      targetBoost = -8;
+    }
+
+    const boostLerpSpeed = targetBoost > boost ? 6.0 : 2.5;
+    boost += (targetBoost - boost) * Math.min(1, dt * boostLerpSpeed);
+    boost = Math.max(-10, Math.min(25, boost));
+
+    if (!Number.isFinite(boost)) boost = 0;
+
+    const boostMultiplier = Math.max(1.0, 1.0 + (boost * 0.03));
+
+    if(gear===-1){
+      if(gas){
+        started=true;
+        if(speed>=-reverseMaxSpeed)speed=Math.max(-reverseMaxSpeed,speed-reverseAcceleration*dt);
+      }else{
+        speed=Math.min(0,speed+(brake?100:8)*dt);
+      }
+      if(brake&&speed<0)speed=Math.min(0,speed+83*dt);
+      if(speed>0)speed=Math.max(0,speed-(brake?140:35)*dt);
+    }else if(gear===0){
+      if(brake)speed=Math.max(0,speed-83*dt);
+      else speed=Math.max(0,speed-8*dt);
+      if(speed<0)speed=Math.min(0,speed+83*dt);
+      
+      if(gas) neutralRev=Math.min(1,neutralRev+dt*3.2);
+      else    neutralRev=Math.max(0,neutralRev-dt*1.8);
+
+      const currentRpm=900+neutralRev*(neutralRevMax-900)+Math.abs(speed)*3;
+      if(currentRpm>5500 && flameCooldown<=0){
+        spawnExhaustFlame(0.8+Math.random()*0.5);
+        flameCooldown=0.10;
+        boost = Math.min(25, boost + 4);
+      }
+    }else{
+      const gearOverspeed=Math.max(0,speed-getGearSpeed(gear));
+      if(gearOverspeed>0)speed=Math.max(getGearSpeed(gear),speed-Math.min(72,gearOverspeed*1.8)*dt);
+      
+      if(gas){
+        started=true;
+        const finalAccel = getGearAcceleration(gear) * boostMultiplier;
+        if(speed<getGearSpeed(gear)) speed=Math.min(getGearSpeed(gear),speed+finalAccel*dt);
+      }else{
+        speed=Math.max(0,speed-(brake?100:8)*dt);
+      }
+      if(brake)speed=Math.max(0,speed-83*dt);
+    }
     setBrakeLights(brake);
+
+    if (!Number.isFinite(speed)) speed = 0;
+
+    if (!hasStartedMoving && speed > 5) {
+      hasStartedMoving = true;
+      carSelector.classList.add("hidden");
+    }
+
     const steerInput=(right?1:0)-(left?1:0);steer+=(steerInput-steer)*Math.min(1,dt*5.5);
-    offset+=steer*dt*(1.6+speed*.012);offset*=Math.pow(.985,dt*60);
+    const steerDir=speed<0?-1:1;
+    
+    offset+=steer*steerDir*dt*(1.6+Math.abs(speed)*.012);
+    
     const roadHalfWidth=roadWidth*.5;
-    if(Math.abs(offset)>roadHalfWidth+.75){speed=Math.max(0,speed-65*dt);offset=THREE.MathUtils.clamp(offset,-roadHalfWidth-1.4,roadHalfWidth+1.4);if(Math.random()<dt*3)showToast()}
-    if(Math.abs(offset)>roadHalfWidth+1.4){offset=THREE.MathUtils.clamp(offset,-roadHalfWidth-1.4,roadHalfWidth+1.4)}
-    const travel=speed/3.6*dt;dist+=travel/1000;elapsed+=dt;
+    const collisionBound = roadHalfWidth - 1.0; 
+    
+    if(Math.abs(offset)>collisionBound+.75){speed=Math.max(0,speed-65*dt);offset=THREE.MathUtils.clamp(offset,-collisionBound-1.4,collisionBound+1.4);if(Math.random()<dt*3)showToast()}
+    if(Math.abs(offset)>collisionBound+1.4){offset=THREE.MathUtils.clamp(offset,-collisionBound-1.4,collisionBound+1.4)}
+    
+    const travel=speed/3.6*dt;dist+=Math.abs(travel)/1000;elapsed+=dt;
     wheelSpin=(wheelSpin+travel/.34)%(Math.PI*2);
     const axleAxis=new THREE.Vector3(1,0,0),steerAxis=new THREE.Vector3(0,1,0);
     for(const wheel of wheelAnimations){
@@ -435,8 +823,10 @@
       steeringWheelRig.quaternion.copy(steeringWheelBase).multiply(handRotation);
     }
     worldZ-=travel;
-    const roadX=centerX(worldZ);playerRig.position.set(roadX+offset,.18,worldZ);
-    const aheadX=centerX(worldZ-80)-roadX;playerRig.rotation.y=Math.PI-Math.atan2(aheadX,80)-steer*.045;
+    
+    playerRig.position.set(offset,.18,worldZ);
+    playerRig.rotation.y=Math.PI - steer*steerDir*.045;
+    
     if(cameraMode==="chase")updateChaseCamera();else camera.rotation.z=-steer*.018;
     if(worldZ < -roadLength){
       worldZ+=roadLength;
@@ -445,41 +835,73 @@
       const sectionBehind=trackSections.find(section=>section.position.z>worldZ+roadLength/2);
       if(sectionBehind)sectionBehind.position.z=-roadLength;
     }
-    const rpm=Math.round(900+speed/gearSpeed[gear]*6700);
-    if(audioContext&&engineOscillator&&engineHarmonic&&engineFilter&&engineGain&&audioContext.currentTime-lastEngineAudioUpdate>.045){
-      const now=audioContext.currentTime,firingHz=rpm/20;
-      engineOscillator.frequency.setTargetAtTime(firingHz,now,.045);engineHarmonic.frequency.setTargetAtTime(firingHz*2,now,.045);
-      engineFilter.frequency.setTargetAtTime(480+gas*1350+speed/maxSpeed*280,now,.08);
-      engineGain.gain.setTargetAtTime(started ? .012+gas*.034+speed/maxSpeed*.008 : .0001,now,.09);lastEngineAudioUpdate=now;
+    
+    let rpm;
+    if(gear===-1) {
+      rpm=Math.round(900+Math.abs(speed)/reverseMaxSpeed*4200);
+    } else if(gear===0) {
+      rpm=Math.round(900+neutralRev*(neutralRevMax-900)+Math.abs(speed)*3);
+    } else {
+      const boostRpmBonus = Math.max(0, boost) * 80; 
+      rpm=Math.round(900+Math.min(1,speed/getGearSpeed(gear))*9100 + boostRpmBonus);
     }
-    speedText.textContent=String(Math.round(speed)).padStart(3,"0");distanceText.textContent=dist.toFixed(2);gearText.textContent=String(gear);rpmText.textContent=`RPM ${String(rpm).padStart(4,"0")}`;
+    rpm = Math.min(10000, rpm);
+    if (!Number.isFinite(rpm)) rpm = 900;
+
+    if (gear > 0 && gas && boost > 15 && flameCooldown <= 0) {
+      spawnExhaustFlame(0.6 + Math.random() * 0.4);
+      flameCooldown = 0.15;
+    }
+    
+    boostText.textContent = boost.toFixed(1);
+    if (boost > 18) {
+      boostGaugeBox.classList.add("overboost");
+    } else {
+      boostGaugeBox.classList.remove("overboost");
+    }
+
+    if(audioContext&&engineOscillator&&engineHarmonic&&engineFilter&&engineGain&&audioContext.currentTime-lastEngineAudioUpdate>.045){
+      const now=audioContext.currentTime;
+      
+      const safeRpm = Number.isFinite(rpm) ? rpm : 900;
+      const safeSpeed = Number.isFinite(speed) ? speed : 0;
+      const safeGas = gas ? 1 : 0;
+      const safeRevFactor = Number.isFinite(neutralRev) ? neutralRev : 0;
+
+      const firingHz = safeRpm / 20;
+      engineOscillator.frequency.setTargetAtTime(firingHz, now, .045);
+      engineHarmonic.frequency.setTargetAtTime(firingHz * 3, now, .045);
+      
+      const filterFreq = 800 + safeGas * 3500 + safeRevFactor * 2600 + Math.abs(safeSpeed) / getMaxSpeed() * 1200;
+      engineFilter.frequency.setTargetAtTime(filterFreq, now, .08);
+      
+      const gainVal = started ? .012 + safeGas * .034 + safeRevFactor * .03 + Math.abs(safeSpeed) / getMaxSpeed() * .008 : .0001;
+      engineGain.gain.setTargetAtTime(gainVal, now, .09);
+      
+      lastEngineAudioUpdate = now;
+    }
+    
+    speedText.textContent=String(Math.round(speed));
+    rpmText.textContent=(rpm/1000).toFixed(1); 
+    distanceText.textContent=dist.toFixed(2);
+    gearText.textContent=gearLabel(gear);
+    
+    drawGauge(ctxSpeed, speed, -50, getMaxSpeed(), getMaxSpeed()*0.8, getMaxSpeed());
+    drawGauge(ctxRpm, rpm, 0, 10000, 8000, 10000);
+    drawGauge(ctxBoost, boost, -10, 25, 18, 25);
+
+    updateExhaustFlames(dt);
+
     message.classList.toggle("hide",started&&!!playerCar);if(toastTime>0){toastTime-=dt;if(toastTime<=0)toast.classList.remove("show")}
   }
   function draw(){renderer.render(scene,camera)}
   function animate(now){const dt=Math.min(.04,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(animate)}
   requestAnimationFrame(animate);
-  function resize(){
-    camera.aspect=innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    const mobilePixelCap = (matchMedia('(pointer:coarse)').matches || innerWidth < 900) ? 1.3 : 1.7;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, mobilePixelCap));
-    renderer.setSize(innerWidth,innerHeight);
-  }
+  function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight)}
   addEventListener("resize",resize);
-  addEventListener("orientationchange",()=>setTimeout(resize,120));
-  document.addEventListener("visibilitychange",()=>{if(document.hidden)held.clear();});
   addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key))e.preventDefault();held.add(e.key);if(e.key.toLowerCase()==="w"||e.key==="ArrowUp")startEngineAudio();if(!e.repeat&&e.key.toLowerCase()==="e")changeGear(1);if(!e.repeat&&e.key.toLowerCase()==="q")changeGear(-1);if(e.key.toLowerCase()==="c"){cameraMode=cameraMode==="driver"?"chase":"driver";applyCameraMode()}if(e.key.toLowerCase()==="r")location.reload()});
   addEventListener("keyup",e=>held.delete(e.key));addEventListener("blur",()=>held.clear());
-  document.querySelectorAll(".touch").forEach(button=>{
-    const key=button.dataset.key;
-    button.addEventListener("pointerdown",e=>{e.preventDefault();held.add(key);if(key==="w"||key==="ArrowUp")startEngineAudio();try{button.setPointerCapture(e.pointerId)}catch(_){}});
-    for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>held.delete(key));
-    button.addEventListener("contextmenu",e=>e.preventDefault());
-  });
-  // ล็อก landscape ถ้าเบราว์เซอร์รองรับ (เฉพาะมือถือ)
-  if(matchMedia('(pointer:coarse)').matches && screen.orientation?.lock){
-    screen.orientation.lock('landscape').catch(()=>{});
-  }
+  document.querySelectorAll(".touch").forEach(button=>{const key=button.dataset.key;button.addEventListener("pointerdown",e=>{e.preventDefault();held.add(key);if(key==="w"||key==="ArrowUp")startEngineAudio();button.setPointerCapture(e.pointerId)});for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>held.delete(key))});
 })();
 </script>
 </body>
