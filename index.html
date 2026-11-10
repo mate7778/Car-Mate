@@ -269,7 +269,6 @@
     g.globalAlpha=1;const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;return t;
   }
   
-  // ใช้ Canvas Texture แทนการโหลดไฟล์ภายนอกทั้งหมด (แก้ปัญหา CORS)
   const asphaltFallback=noiseTexture("#1f2326","#5c6164",512,24000);
   asphaltFallback.wrapS=asphaltFallback.wrapT=THREE.RepeatWrapping;asphaltFallback.repeat.set(1,1);asphaltFallback.encoding=THREE.sRGBEncoding;
   
@@ -466,16 +465,12 @@
     if(!audioContext){
       try{
         audioContext=new AudioContextClass();
-        // ฟิลเตอร์ต่ำลง ตัดแหลม เสียงเลยทุ้มขึ้น
         engineFilter=audioContext.createBiquadFilter();engineFilter.type="lowpass";engineFilter.frequency.value=1100;engineFilter.Q.value=1.6;
         engineGain=audioContext.createGain();engineGain.gain.value=.0001;engineFilter.connect(engineGain);engineGain.connect(audioContext.destination);
-        // โอเวอร์ไดรฟ์เล็กน้อยเพื่อเสียงดุ ทุ้ม (WaveShaper soft-clip)
         const shaper=audioContext.createWaveShaper();const curve=new Float32Array(1024);
         for(let i=0;i<1024;i++){const x=i/511.5-1;curve[i]=Math.tanh(x*2.2)}shaper.curve=curve;shaper.oversample="2x";
         engineFilter.disconnect();engineFilter.connect(shaper);shaper.connect(engineGain);
-        // โอสซิลเลเตอร์หลัก รอบต่ำลง (ทุ้มกว่าเดิม)
         engineOscillator=audioContext.createOscillator();engineOscillator.type="sawtooth";engineOscillator.frequency.value=40;engineOscillator.connect(engineFilter);engineOscillator.start();
-        // ซับเบสไซน์ เสริมความทุ้มลงไปอีก (ความถี่ครึ่งหนึ่งของตัวหลัก)
         engineHarmonic=audioContext.createOscillator();engineHarmonic.type="sine";engineHarmonic.frequency.value=40;
         const subGain=audioContext.createGain();subGain.gain.value=.85;
         const subFilter=audioContext.createBiquadFilter();subFilter.type="lowpass";subFilter.frequency.value=320;
@@ -485,7 +480,6 @@
     if(audioContext.state==="suspended")audioContext.resume().catch(()=>{});
   }
 
-  // ===== เสียงปะทุออกท่อ (Backfire Pop) =====
   let noiseBuffer=null;
   function playExhaustPop(intensity=1){
     if(!audioContext||audioContext.state!=="running")return;
@@ -506,7 +500,6 @@
       g.gain.exponentialRampToValueAtTime(.001,t+.16+Math.random()*.08);
       src.connect(bp);bp.connect(lp);lp.connect(g);g.connect(audioContext.destination);
       src.start(t);src.stop(t+.3);
-      // ส่วนทุ้ม (sub-thump) ที่ตามมา
       const sub=audioContext.createOscillator();sub.type="sine";
       sub.frequency.setValueAtTime(85+Math.random()*25,t);
       sub.frequency.exponentialRampToValueAtTime(38,t+.13);
@@ -562,6 +555,56 @@
   const porscheBinary=Uint8Array.from(atob(window.PORSCHE_GLB_DATA),ch=>ch.charCodeAt(0)).buffer;
   
   let carBodyMaterials = [];
+
+  // ===== รถบอทจราจรบนทางด่วน (ประกาศนอก callback) =====
+  let botCars = [];
+  const BOT_LANES=[-9,-3,3,9];
+  const BOT_COLORS=[0x4a90d9,0x1a1c1f,0xd91a1a,0x8cd91a,0xc0c8d0,0xe8e4da,0x7a4a2a,0x2a7a6a];
+  const BOT_SPAWN_MIN=-180;   // ใกล้สุด (ข้างหน้าผู้เล่น)
+  const BOT_SPAWN_MAX=-900;   // ไกลสุด
+  const BOT_COLLISION_DZ=5.2; // ครึ่งความยาวรถบอท (z)
+  const BOT_COLLISION_DX=2.3; // ครึ่งความกว้างรถบอท (x)
+  const PLAYER_HALF_DZ=2.6;
+  const PLAYER_HALF_DX=1.1;
+
+  // ===== ฟังก์ชันสร้างรถบอท (นอก callback) =====
+  function spawnBots(){
+    if(!vehicleTemplate)return;
+    for(const b of botCars){ scene.remove(b.mesh); }
+    botCars.length = 0;
+    for(let i=0;i<12;i++){
+      const bot=vehicleTemplate.clone(true);
+      const color=BOT_COLORS[i%BOT_COLORS.length];
+      bot.traverse(o=>{
+        if(o.isMesh){
+          const ms=Array.isArray(o.material)?o.material:[o.material];
+          const cloned=ms.map(m=>{if(m&&m.name&&m.name.includes("Main")){const c=m.clone();c.color.setHex(color);return c}return m});
+          o.material=Array.isArray(o.material)?cloned:cloned[0];
+        }
+      });
+      const lane=BOT_LANES[i%BOT_LANES.length];
+      const spawnZ = worldZ + BOT_SPAWN_MIN - Math.random()*(BOT_SPAWN_MAX - BOT_SPAWN_MIN);
+      bot.position.set(lane,.18,spawnZ);
+      bot.rotation.y=Math.PI;
+      scene.add(bot);
+      botCars.push({
+        mesh:bot,
+        speed: 55 + Math.random()*45,
+        lane: lane,
+        z: spawnZ,
+        baseColor: color
+      });
+    }
+  }
+
+  // ===== ฟังก์ชัน respawn รถบอท (นอก callback) =====
+  function respawnBot(bot){
+    bot.lane = BOT_LANES[Math.floor(Math.random()*BOT_LANES.length)];
+    bot.speed = 55 + Math.random()*45;
+    bot.z = worldZ - (650 + Math.random()*250);
+    bot.mesh.position.x = bot.lane;
+    bot.mesh.position.z = bot.z;
+  }
 
   function buildCarSelector(){
     carSelector.innerHTML = '';
@@ -739,6 +782,7 @@
     
     selectCar(0);
     applyCameraMode();
+    spawnBots();
     message.querySelector("span").textContent="กด W หรือ ↑ เพื่อออกเดินทาง";
   },error=>{
     console.error("Could not load the car model",error);
@@ -770,13 +814,12 @@
     if (gear !== 0) neutralRev = 0;      
     gearText.textContent = gearLabel(gear);
 
-    // 🔥 จังหวะลดเกียร์ (Downshift) และความเร็วสูง -> ไฟปะทุออกท่อ (Shift Pop)
     if (oldGear > 0 && gear > 0 && gear < oldGear) {
       if (speed > 80) {
         spawnExhaustFlame(1.0 + Math.random() * 0.6);
         playExhaustPop(1.1);
         flameCooldown = 0.15;
-        boost = Math.min(25, boost + 6); // เติมบูสต์ให้ต่อเนื่อง
+        boost = Math.min(25, boost + 6);
       }
     }
   }
@@ -949,6 +992,38 @@
     drawGauge(ctxSpeed, speed, -50, getMaxSpeed(), getMaxSpeed()*0.8, getMaxSpeed());
     drawGauge(ctxRpm, rpm, 0, 10000, 8000, 10000);
     drawGauge(ctxBoost, boost, -10, 25, 18, 25);
+
+    // ===== อัปเดตรถบอท + collision =====
+    for(const bot of botCars){
+      bot.z -= (bot.speed/3.6) * dt;
+
+      if (bot.z > worldZ + 120){
+        respawnBot(bot);
+      }
+
+      bot.mesh.position.z = bot.z;
+      bot.mesh.position.x = bot.lane;
+      bot.mesh.rotation.y = Math.PI + Math.sin(elapsed*.7 + bot.z*.05)*.004;
+
+      const dz = bot.z - worldZ;
+      const dx = bot.lane - offset;
+      const overlapZ = BOT_COLLISION_DZ + PLAYER_HALF_DZ - Math.abs(dz);
+      const overlapX = BOT_COLLISION_DX + PLAYER_HALF_DX - Math.abs(dx);
+
+      if (overlapZ > 0 && overlapX > 0){
+        if (overlapZ < overlapX){
+          const dir = dz > 0 ? -1 : 1;
+          worldZ -= dir * overlapZ;
+          speed = Math.max(0, speed - 120*dt);
+          if (speed > 0) speed *= 0.5;
+        } else {
+          const dir = dx > 0 ? -1 : 1;
+          offset += dir * overlapX;
+          speed = Math.max(0, speed - 80*dt);
+        }
+        if (Math.random() < dt*4) showToast();
+      }
+    }
 
     updateExhaustFlames(dt);
 
