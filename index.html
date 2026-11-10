@@ -14,7 +14,10 @@
     .top{position:absolute;inset:0 0 auto;display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;background:linear-gradient(#071015a8,transparent);pointer-events:none;z-index:10}
     .brand{font-size:.7rem;letter-spacing:.2em;font-weight:800;color:#e1ece8;text-shadow:0 1px 8px #000}.brand small{display:block;margin-top:5px;color:#bacac5;font-size:.58rem;font-weight:500;letter-spacing:.13em}
     .stats{display:flex;gap:8px;pointer-events:none}.stat{min-width:80px;padding:8px 11px;border:1px solid #ffffff25;border-radius:10px;background:#0710158a;backdrop-filter:blur(9px);text-align:center;box-shadow:0 5px 20px #0002}.stat span{display:block;color:#adbfbb;font-size:.58rem;letter-spacing:.14em}.stat strong{display:block;margin-top:3px;font-size:1rem;font-weight:650;font-variant-numeric:tabular-nums}
-    .gear-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;pointer-events:auto}.gear-control strong{min-width:14px;margin:0}.gear-control button{width:23px;height:22px;padding:0;border:1px solid #ffffff35;border-radius:6px;background:#ffffff18;color:#fff;font:700 .9rem "Segoe UI",sans-serif;cursor:pointer}.gear-control button:hover{background:#ffffff38}
+    
+    .gear-control{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;pointer-events:auto;transition:opacity 0.3s;}
+    .gear-control.disabled{opacity:0.3;pointer-events:none;}
+    .gear-control strong{min-width:14px;margin:0}.gear-control button{width:23px;height:22px;padding:0;border:1px solid #ffffff35;border-radius:6px;background:#ffffff18;color:#fff;font:700 .9rem "Segoe UI",sans-serif;cursor:pointer}.gear-control button:hover{background:#ffffff38}
     
     /* ===== Analog Gauges (Dashboard) ===== */
     .dashboard{position:absolute;bottom:18px;right:22px;display:flex;gap:15px;z-index:10;pointer-events:none;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.6))}
@@ -60,7 +63,7 @@
     .btn-item .name{font-size:.75rem;font-weight:700}
     .btn-item .spec{font-size:.6rem;color:#a8b6b5;letter-spacing:.05em}
     
-    /* Toggle Switch Style for Traffic */
+    /* Toggle Switch Style */
     .traffic-toggle { display: flex; align-items: center; justify-content: space-between; width: 100%; cursor: pointer; }
     .toggle-indicator {
       width: 36px; height: 20px; border-radius: 10px; background: #333; position: relative;
@@ -74,7 +77,6 @@
     .btn-item.active .toggle-indicator::after { transform: translateX(16px); background: #fff; }
     .btn-item.active .traffic-label { color: #c8ffd8; }
     .traffic-label { font-weight: 700; color: #a8b6b5; }
-
 
     /* Mobile adjustments */
     @media(max-width:700px){
@@ -127,7 +129,7 @@
   <div class="top">
     <div class="brand">EVENING DRIVE<small>OPEN ROAD · FIRST PERSON</small></div>
     <div class="stats">
-      <div class="stat"><span>GEAR</span><div class="gear-control"><button id="gearDown" type="button" aria-label="ลดเกียร์">−</button><strong id="gear">1</strong><button id="gearUp" type="button" aria-label="เพิ่มเกียร์">+</button></div></div>
+      <div class="stat"><span>GEAR</span><div class="gear-control" id="gearControl"><button id="gearDown" type="button" aria-label="ลดเกียร์">−</button><strong id="gear">1</strong><button id="gearUp" type="button" aria-label="เพิ่มเกียร์">+</button></div></div>
       <div class="stat"><span>DISTANCE</span><strong><b id="distance">0.00</b> km</strong></div>
     </div>
   </div>
@@ -160,11 +162,14 @@
   <div class="menu-container" id="menuContainer">
     <div class="selector-group" id="steeringSelector">
       <div class="title">STEERING WHEEL</div>
-      <!-- ปุ่มจะถูกเจนด้วย JS -->
     </div>
     <div class="selector-group" id="carSelector">
       <div class="title">CAR COLOR</div>
-      <!-- ปุ่มจะถูกเจนด้วย JS -->
+    </div>
+    <div class="selector-group" id="transmissionSelector">
+      <div class="title">TRANSMISSION</div>
+      <button class="btn-item active" id="btnManual">Manual</button>
+      <button class="btn-item" id="btnAuto">Automatic</button>
     </div>
     <div class="selector-group" id="trafficSelector">
       <div class="title">TRAFFIC</div>
@@ -189,6 +194,7 @@
   const speedText = document.querySelector("#speedText"); 
   const distanceText = document.querySelector("#distance"); 
   const gearText = document.querySelector("#gear"); 
+  const gearControl = document.querySelector("#gearControl");
   const rpmText = document.querySelector("#rpmText");
   const boostText = document.querySelector("#boostText");
   const boostGaugeBox = document.querySelector("#boostGaugeBox");
@@ -198,7 +204,11 @@
   const steeringSelector = document.querySelector("#steeringSelector");
   
   const trafficToggleBtn = document.querySelector("#trafficToggleBtn");
+  const btnManual = document.querySelector("#btnManual");
+  const btnAuto = document.querySelector("#btnAuto");
+  
   let trafficEnabled = true;
+  let isAuto = false;
 
   const CAR_SPECS = [
     { name: "Classic Blue",   color: 0x4a90d9, swatch: "#4a90d9", maxSpeed: 710, gearSpeed: [0,110,240,360,480,580,710], accel: [0,82,64,49,38,30,24] },
@@ -770,7 +780,6 @@
     if (trafficEnabled) {
       trafficToggleBtn.classList.add('active');
       trafficToggleBtn.querySelector('.traffic-label').textContent = 'Cars on road';
-      // คืนชีพรถบอท
       for (const bot of botCars) {
         scene.add(bot.mesh);
         respawnBot(bot);
@@ -779,12 +788,34 @@
     } else {
       trafficToggleBtn.classList.remove('active');
       trafficToggleBtn.querySelector('.traffic-label').textContent = 'Empty road';
-      // ซ่อนรถบอท
       for (const bot of botCars) {
         scene.remove(bot.mesh);
       }
       toast.textContent = `ปิดรถบอทแล้ว`;
     }
+    toast.classList.add("show");
+    toastTime = 1.5;
+  });
+
+  // ===== Transmission Toggle Logic =====
+  btnManual.addEventListener('click', () => {
+    if (hasStartedMoving) return;
+    isAuto = false;
+    btnManual.classList.add('active');
+    btnAuto.classList.remove('active');
+    gearControl.classList.remove('disabled');
+    toast.textContent = `เกียร์: แมนนวล`;
+    toast.classList.add("show");
+    toastTime = 1.5;
+  });
+
+  btnAuto.addEventListener('click', () => {
+    if (hasStartedMoving) return;
+    isAuto = true;
+    btnAuto.classList.add('active');
+    btnManual.classList.remove('active');
+    gearControl.classList.add('disabled');
+    toast.textContent = `เกียร์: ออโต้`;
     toast.classList.add("show");
     toastTime = 1.5;
   });
@@ -1258,6 +1289,18 @@
     setBrakeLights(brake);
 
     if (!Number.isFinite(speed)) speed = 0;
+
+    // ===== Automatic Transmission Logic =====
+    if (isAuto && gear > 0 && !brake) {
+      // Auto Upshift
+      if (speed > getGearSpeed(gear) * 0.95 && gear < 6) {
+        changeGear(1);
+      }
+      // Auto Downshift
+      if (speed < getGearSpeed(gear) * 0.4 && gear > 1) {
+        changeGear(-1);
+      }
+    }
 
     if (!hasStartedMoving && speed > 5) {
       hasStartedMoving = true;
