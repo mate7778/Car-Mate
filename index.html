@@ -159,6 +159,7 @@
 <script src="./three.min.js"></script>
 <script src="./GLTFLoader.js"></script>
 <script src="./porsche-data.js"></script>
+<script src="./jdm-data.js"></script> <!-- ✅ เพิ่มบรรทัดนี้เพื่อโหลด JDM จาก Base64 -->
 <script>
 (() => {
   const THREE = window.THREE;
@@ -200,13 +201,12 @@
       bodyPattern: /(Main|Body|Paint)/,
       driverHidePattern: /Main_body|Body_Paint|Tire|(?:RL|FL|FR|RR)_wheel|Fender|Mirror|Hood|Bonnet|Wing|Spoiler|bumper|Headlight|Taillight|Windshield|Windows|Window_circuit|Sunroof|glass|Exhaust|Blinker/i,
       steeringMeshNames: { logo: "Steering_wheel_car_logo", leather: "Interior_Leather_0", main: "Interior_Interior_main_0" },
-      // ✅ 911 ไฟส้ม ขนาดปกติ
       exhaustConfig: {
         color1: 0xffaa33,
         color2: 0xff7722,
         lightColor: 0xff7722,
         intensity: 3.0,
-        sizeMultiplier: 1.0,       // ขนาดปกติ
+        sizeMultiplier: 1.0,
         customOffset: null
       },
       wheelConfig: {
@@ -220,8 +220,8 @@
     {
       id: "350z",
       name: "JDM Drift Car",
-      dataKey: "jdm_style_drift_car.glb", 
-      isExternal: true, 
+      dataKey: "JDM_GLB_DATA", // ✅ ใช้ตัวแปร Base64
+      isExternal: false,      // ✅ เปลี่ยนเป็น false เพื่อโหลดจากตัวแปร
       customScale: 0.01, 
       modelRotationY: 0,
       yOffsetCorrection: -0.17,
@@ -231,13 +231,12 @@
       bodyPattern: /(Body|Paint|CarPaint|Chassis)/i,
       driverHidePattern: /^NEVER_MATCH_ANYTHING_350Z$/,
       steeringMeshNames: { main: "Steering_Wheel_interior2_0" }, 
-      // ✅ JDM ไฟฟ้า ขนาดใหญ่ (เพราะ scale 0.01)
       exhaustConfig: {
         color1: 0x00ccff,
         color2: 0x0055ff,
         lightColor: 0x00aaff,
         intensity: 4.5,
-        sizeMultiplier: 100,       // ✅ ขยาย 100 เท่าให้พอกับ scale
+        sizeMultiplier: 100,
         customOffset: {
           left:  new THREE.Vector3(-45, 35, -270),
           right: new THREE.Vector3( 45, 35, -270)
@@ -535,7 +534,6 @@
       color1: 0xffaa33, color2: 0xff7722, lightColor: 0xff7722, intensity: 3.0, sizeMultiplier: 1.0, customOffset: null
     };
     
-    // ✅ ตัวคูณขนาด (สำหรับ JDM ที่ scale 0.01 ต้องคูณ 100)
     const sizeMul = exhaustConf.sizeMultiplier || 1.0;
     
     if(exhaustConf.customOffset){
@@ -564,7 +562,6 @@
     }
     
     for(const origin of exhaustPoints){
-      // ✅ ขยายขนาด Cone ตาม sizeMultiplier
       const baseRadius = 0.10 * intensity * sizeMul;
       const baseHeight = 0.42 * intensity * sizeMul;
       
@@ -615,7 +612,6 @@
       f.mesh.material.opacity=0.95*t;
       const s=1+(1-t)*0.6;               
       f.mesh.scale.set(s,s,s);
-      // ✅ ระยะการเคลื่อนที่ใช้ sizeMultiplier ด้วย
       f.mesh.position.z -= dt * 1.8 * (f.sizeMul || 1);
       f.light.intensity = (f.baseIntensity || 3.0) * t;
       f.light.position.copy(f.mesh.position).add(new THREE.Vector3(0,0,-0.25 * (f.sizeMul || 1)));
