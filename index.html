@@ -201,10 +201,10 @@
       driverHidePattern: /Main_body|Body_Paint|Tire|(?:RL|FL|FR|RR)_wheel|Fender|Mirror|Hood|Bonnet|Wing|Spoiler|bumper|Headlight|Taillight|Windshield|Windows|Window_circuit|Sunroof|glass|Exhaust|Blinker/i,
       steeringMeshNames: { logo: "Steering_wheel_car_logo", leather: "Interior_Leather_0", main: "Interior_Interior_main_0" },
       wheelConfig: {
-        steerDirection: 1,
+        steerDirection: -1,
         spinDirection: 1,
         maxSteerAngle: 0.42,
-        pivotMethod: "origin" // 911 ใช้ Local Origin
+        pivotMethod: "origin"
       }
     },
     {
@@ -222,10 +222,10 @@
       driverHidePattern: /^NEVER_MATCH_ANYTHING_350Z$/,
       steeringMeshNames: { main: "Steering_Wheel_interior2_0" }, 
       wheelConfig: {
-        steerDirection: -1, // ✅ สลับเป็น -1 แก้เลี้ยวผิดข้าง
+        steerDirection: -1, // ✅ เปลี่ยนเป็น -1 แก้เลี้ยวกลับข้าง
         spinDirection: -1,
         maxSteerAngle: 0.42,
-        pivotMethod: "box" // ✅ JDM ใช้ Bounding Box (เพราะ Origin ไม่อยู่กลาง)
+        pivotMethod: "hardcode"
       }
     }
   ];
@@ -679,7 +679,7 @@
   
   let carBodyMaterials = [];
 
-  // ===== Auto-detect helpers (คืนค่าเดิม) =====
+  // ===== Auto-detect helpers =====
   function findWheelsByPattern(car, pattern) {
     const found = [];
     car.traverse(obj => {
@@ -1084,7 +1084,7 @@
         if (c.z > maxZ) maxZ = c.z;
       });
 
-      // ✅ สร้าง Pivot แยกตามคัน (911 ใช้ Origin, JDM ใช้ attach)
+      // ✅ สร้าง Pivot แบบแยกตามคัน
       wheelAnimations = wheels.map(spec => {
         const object = spec.object;
         playerCar.updateMatrixWorld(true);
@@ -1095,17 +1095,19 @@
         
         let pivot, base;
         
-        // ✅ แยกวิธีตาม wheelConfig.pivotMethod
-        if (v.wheelConfig.pivotMethod === "attach") {
-          // วิธีที่ 1: ใช้ attach (สำหรับ JDM)
+        if (v.wheelConfig.pivotMethod === "hardcode") {
+          // JDM: Hardcode Pivot ให้อยู่ที่แกนกลางรถ (X=0)
+          const localPivot = object.parent.worldToLocal(centerWorld.clone());
+          localPivot.x = 0;
+          
           pivot = new THREE.Group();
-          pivot.position.copy(centerWorld);
+          pivot.position.copy(localPivot);
           object.parent.add(pivot);
           pivot.attach(object);
           pivot.quaternion.identity();
           base = pivot.quaternion.clone();
         } else {
-          // วิธีที่ 2: ใช้ base rotation (สำหรับ 911) - แบบเดิม
+          // 911: ใช้ Origin เดิม
           base = object.quaternion.clone();
           if (isFront) {
             const euler = new THREE.Euler().setFromQuaternion(base, "YXZ");
@@ -1113,7 +1115,7 @@
             const correction = THREE.MathUtils.euclideanModulo(straightYaw - euler.y + Math.PI, Math.PI * 2) - Math.PI;
             base.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0), correction));
           }
-          pivot = object; // 911 ใช้ object ตรงๆ
+          pivot = object;
         }
         
         return { object: pivot, base, side: spec.side, front: isFront };
@@ -1509,25 +1511,26 @@
     const travel=speed/3.6*dt;dist+=Math.abs(travel)/1000;elapsed+=dt;
     wheelSpin=(wheelSpin+travel/.34)%(Math.PI*2);
     
-    // ✅ ระบบหมุนล้อ (อ่านค่าจาก wheelConfig ของแต่ละคัน)
+       // ✅ หมุนล้อแบบบังคับแกน World (แก้การเอียง)
     const config = currentVehicle.wheelConfig || { 
       steerDirection: -1, 
       spinDirection: 1, 
       maxSteerAngle: 0.42 
     };
     
-    const axleAxis=new THREE.Vector3(1,0,0),steerAxis=new THREE.Vector3(0,1,0);
+    const steerAxis = new THREE.Vector3(0, 0, 1); // แกน Y (หันซ้าย-ขวา)
+    const spinAxis = new THREE.Vector3(1, 0, 0);  // แกน X (หมุนกลิ้ง)
     const qSpin = new THREE.Quaternion();
     const qSteer = new THREE.Quaternion();
     
     for(const wheel of wheelAnimations){
-      // หมุนกลิ้ง (Spin)
-      qSpin.setFromAxisAngle(axleAxis, wheelSpin * wheel.side * config.spinDirection);
+      qSpin.setFromAxisAngle(spinAxis, wheelSpin * wheel.side * config.spinDirection);
       
-      // หมุนเลี้ยว (Steer) - เฉพาะล้อหน้า
       if(wheel.front){
+        // ✅ บังคับให้หักเลี้ยวรอบแกน Y ของ World
         qSteer.setFromAxisAngle(steerAxis, steer * config.steerDirection * config.maxSteerAngle);
-        wheel.object.quaternion.copy(wheel.base).multiply(qSteer).multiply(qSpin);
+        // ✅ ใช้ qSteer (World) * base * qSpin
+        wheel.object.quaternion.copy(qSteer).multiply(wheel.base).multiply(qSpin);
       } else {
         wheel.object.quaternion.copy(wheel.base).multiply(qSpin);
       }
