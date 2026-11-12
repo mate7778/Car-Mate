@@ -200,11 +200,21 @@
       bodyPattern: /(Main|Body|Paint)/,
       driverHidePattern: /Main_body|Body_Paint|Tire|(?:RL|FL|FR|RR)_wheel|Fender|Mirror|Hood|Bonnet|Wing|Spoiler|bumper|Headlight|Taillight|Windshield|Windows|Window_circuit|Sunroof|glass|Exhaust|Blinker/i,
       steeringMeshNames: { logo: "Steering_wheel_car_logo", leather: "Interior_Leather_0", main: "Interior_Interior_main_0" },
+      // ✅ 911 ไฟส้ม ขนาดปกติ
+      exhaustConfig: {
+        color1: 0xffaa33,
+        color2: 0xff7722,
+        lightColor: 0xff7722,
+        intensity: 3.0,
+        sizeMultiplier: 1.0,       // ขนาดปกติ
+        customOffset: null
+      },
       wheelConfig: {
         steerDirection: -1,
         spinDirection: 1,
         maxSteerAngle: 0.42,
-        pivotMethod: "origin"
+        pivotMethod: "origin",
+        steerAxis: new THREE.Vector3(0, 1, 0)
       }
     },
     {
@@ -221,11 +231,24 @@
       bodyPattern: /(Body|Paint|CarPaint|Chassis)/i,
       driverHidePattern: /^NEVER_MATCH_ANYTHING_350Z$/,
       steeringMeshNames: { main: "Steering_Wheel_interior2_0" }, 
+      // ✅ JDM ไฟฟ้า ขนาดใหญ่ (เพราะ scale 0.01)
+      exhaustConfig: {
+        color1: 0x00ccff,
+        color2: 0x0055ff,
+        lightColor: 0x00aaff,
+        intensity: 4.5,
+        sizeMultiplier: 100,       // ✅ ขยาย 100 เท่าให้พอกับ scale
+        customOffset: {
+          left:  new THREE.Vector3(-45, 35, -270),
+          right: new THREE.Vector3( 45, 35, -270)
+        }
+      },
       wheelConfig: {
-        steerDirection: -1, // ✅ เปลี่ยนเป็น -1 แก้เลี้ยวกลับข้าง
+        steerDirection: -1,
         spinDirection: -1,
         maxSteerAngle: 0.42,
-        pivotMethod: "hardcode"
+        pivotMethod: "hardcode",
+        steerAxis: new THREE.Vector3(0, 0, 1)
       }
     }
   ];
@@ -508,31 +531,53 @@
   function spawnExhaustFlame(intensity=1){
     if(!playerCar) return;
     
-    if(exhaustPoints.length===0){
-      playerCar.updateWorldMatrix(true,true);
-      const tailGroup=playerCar.getObjectByName("Taillights");
-      let baseZ = -2.05; 
-      let baseY = 0.32; 
-      
-      if(tailGroup){
-        const tailBounds=new THREE.Box3().setFromObject(tailGroup).applyMatrix4(playerCar.matrixWorld.clone().invert());
-        baseZ = tailBounds.min.z - 0.05; 
-        baseY = tailBounds.min.y - 0.35; 
+    const exhaustConf = currentVehicle.exhaustConfig || {
+      color1: 0xffaa33, color2: 0xff7722, lightColor: 0xff7722, intensity: 3.0, sizeMultiplier: 1.0, customOffset: null
+    };
+    
+    // ✅ ตัวคูณขนาด (สำหรับ JDM ที่ scale 0.01 ต้องคูณ 100)
+    const sizeMul = exhaustConf.sizeMultiplier || 1.0;
+    
+    if(exhaustConf.customOffset){
+      if(exhaustPoints.length === 0){
+        exhaustPoints.push(exhaustConf.customOffset.left.clone());
+        exhaustPoints.push(exhaustConf.customOffset.right.clone());
       }
-      
-      exhaustPoints.push(
-        new THREE.Vector3(-0.42, baseY, baseZ),
-        new THREE.Vector3( 0.42, baseY, baseZ)
-      );
+    } else {
+      if(exhaustPoints.length === 0){
+        playerCar.updateWorldMatrix(true,true);
+        const tailGroup=playerCar.getObjectByName("Taillights");
+        let baseZ = -2.05; 
+        let baseY = 0.32; 
+        
+        if(tailGroup){
+          const tailBounds=new THREE.Box3().setFromObject(tailGroup).applyMatrix4(playerCar.matrixWorld.clone().invert());
+          baseZ = tailBounds.min.z - 0.05; 
+          baseY = tailBounds.min.y - 0.35; 
+        }
+        
+        exhaustPoints.push(
+          new THREE.Vector3(-0.42, baseY, baseZ),
+          new THREE.Vector3( 0.42, baseY, baseZ)
+        );
+      }
     }
     
     for(const origin of exhaustPoints){
-      const geo=new THREE.ConeGeometry(0.10*intensity, 0.42*intensity, 8, 1, true);
+      // ✅ ขยายขนาด Cone ตาม sizeMultiplier
+      const baseRadius = 0.10 * intensity * sizeMul;
+      const baseHeight = 0.42 * intensity * sizeMul;
+      
+      const geo=new THREE.ConeGeometry(baseRadius, baseHeight, 8, 1, true);
       geo.rotateX(-Math.PI / 2); 
-      geo.translate(0, 0, -0.21 * intensity);
+      geo.translate(0, 0, -0.21 * intensity * sizeMul);
       
       const mat=flameMaterialBase.clone();
-      mat.color.setHSL(0.08 + Math.random()*0.04, 1, 0.6);
+      const colorMix = Math.random();
+      const c1 = new THREE.Color(exhaustConf.color1);
+      const c2 = new THREE.Color(exhaustConf.color2);
+      mat.color.copy(c1).lerp(c2, colorMix);
+      
       const mesh=new THREE.Mesh(geo,mat);
       mesh.position.copy(origin);
       mesh.rotation.z=(Math.random()-0.5)*0.15;
@@ -540,12 +585,16 @@
       
       playerCar.add(mesh);
       
-      const light=new THREE.PointLight(0xff7722, 0, 3.5, 2);
-      light.position.copy(origin).add(new THREE.Vector3(0,0,-0.25));
+      const light=new THREE.PointLight(exhaustConf.lightColor, 0, 3.5 * sizeMul, 2);
+      light.position.copy(origin).add(new THREE.Vector3(0,0,-0.25 * sizeMul));
       playerCar.add(light);
       
       const maxLife=0.16 + Math.random()*0.10;
-      exhaustFlames.push({ mesh, light, life:maxLife, maxLife });
+      exhaustFlames.push({ 
+        mesh, light, life:maxLife, maxLife, 
+        baseIntensity: exhaustConf.intensity,
+        sizeMul: sizeMul
+      });
     }
   }
 
@@ -566,9 +615,10 @@
       f.mesh.material.opacity=0.95*t;
       const s=1+(1-t)*0.6;               
       f.mesh.scale.set(s,s,s);
-      f.mesh.position.z -= dt*1.8;       
-      f.light.intensity=3.0*t;
-      f.light.position.copy(f.mesh.position).add(new THREE.Vector3(0,0,-0.25));
+      // ✅ ระยะการเคลื่อนที่ใช้ sizeMultiplier ด้วย
+      f.mesh.position.z -= dt * 1.8 * (f.sizeMul || 1);
+      f.light.intensity = (f.baseIntensity || 3.0) * t;
+      f.light.position.copy(f.mesh.position).add(new THREE.Vector3(0,0,-0.25 * (f.sizeMul || 1)));
     }
   }
 
@@ -1084,7 +1134,7 @@
         if (c.z > maxZ) maxZ = c.z;
       });
 
-      // ✅ สร้าง Pivot แบบแยกตามคัน
+      // ✅ สร้าง Pivot แยกตามคัน
       wheelAnimations = wheels.map(spec => {
         const object = spec.object;
         playerCar.updateMatrixWorld(true);
@@ -1096,7 +1146,6 @@
         let pivot, base;
         
         if (v.wheelConfig.pivotMethod === "hardcode") {
-          // JDM: Hardcode Pivot ให้อยู่ที่แกนกลางรถ (X=0)
           const localPivot = object.parent.worldToLocal(centerWorld.clone());
           localPivot.x = 0;
           
@@ -1107,7 +1156,6 @@
           pivot.quaternion.identity();
           base = pivot.quaternion.clone();
         } else {
-          // 911: ใช้ Origin เดิม
           base = object.quaternion.clone();
           if (isFront) {
             const euler = new THREE.Euler().setFromQuaternion(base, "YXZ");
@@ -1511,15 +1559,16 @@
     const travel=speed/3.6*dt;dist+=Math.abs(travel)/1000;elapsed+=dt;
     wheelSpin=(wheelSpin+travel/.34)%(Math.PI*2);
     
-       // ✅ หมุนล้อแบบบังคับแกน World (แก้การเอียง)
+    // ✅ หมุนล้อ (ใช้ config จาก currentVehicle)
     const config = currentVehicle.wheelConfig || { 
       steerDirection: -1, 
       spinDirection: 1, 
-      maxSteerAngle: 0.42 
+      maxSteerAngle: 0.42,
+      steerAxis: new THREE.Vector3(0, 1, 0)
     };
     
-    const steerAxis = new THREE.Vector3(0, 0, 1); // แกน Y (หันซ้าย-ขวา)
-    const spinAxis = new THREE.Vector3(1, 0, 0);  // แกน X (หมุนกลิ้ง)
+    const steerAxis = config.steerAxis || new THREE.Vector3(0, 1, 0);
+    const spinAxis = new THREE.Vector3(1, 0, 0);
     const qSpin = new THREE.Quaternion();
     const qSteer = new THREE.Quaternion();
     
@@ -1527,9 +1576,7 @@
       qSpin.setFromAxisAngle(spinAxis, wheelSpin * wheel.side * config.spinDirection);
       
       if(wheel.front){
-        // ✅ บังคับให้หักเลี้ยวรอบแกน Y ของ World
         qSteer.setFromAxisAngle(steerAxis, steer * config.steerDirection * config.maxSteerAngle);
-        // ✅ ใช้ qSteer (World) * base * qSpin
         wheel.object.quaternion.copy(qSteer).multiply(wheel.base).multiply(qSpin);
       } else {
         wheel.object.quaternion.copy(wheel.base).multiply(qSpin);
