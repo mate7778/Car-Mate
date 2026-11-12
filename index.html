@@ -19,6 +19,7 @@
     .gear-control.disabled{opacity:0.3;pointer-events:none;}
     .gear-control strong{min-width:14px;margin:0}.gear-control button{width:23px;height:22px;padding:0;border:1px solid #ffffff35;border-radius:6px;background:#ffffff18;color:#fff;font:700 .9rem "Segoe UI",sans-serif;cursor:pointer}.gear-control button:hover{background:#ffffff38}
     
+    /* Default Desktop Dashboard Layout */
     .dashboard{position:absolute;bottom:18px;right:22px;display:flex;gap:15px;z-index:10;pointer-events:none;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.6))}
     .gauge{position:relative;width:120px;height:120px;background:radial-gradient(circle, #1a2225 0%, #0c1216 100%);border-radius:50%;border:3px solid #2a353b;box-shadow:inset 0 0 20px #000, 0 0 0 1px #000;transition:transform 0.2s, border-color 0.2s}
     .gauge.boost.overboost{border-color:#ff4d4d; box-shadow:inset 0 0 20px #000, 0 0 15px #ff4d4d}
@@ -54,6 +55,19 @@
     .btn-item.active .traffic-label { color: #c8ffd8; }
     .traffic-label { font-weight: 700; color: #a8b6b5; }
 
+    /* ✅ ปุ่มควบคุมมือถือ */
+    .mobile{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;padding:0 16px 24px;z-index:20;pointer-events:none; padding-bottom: max(24px, env(safe-area-inset-bottom));}
+    .mobile .pad{display:flex;gap:14px;pointer-events:auto}
+    .mobile .pedals{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}
+    .touch{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;width:64px;height:64px;border-radius:50%;border:1px solid #ffffff45;background:#ffffff16;color:#fff;font:700 1.6rem/64px "Segoe UI",sans-serif;text-align:center;backdrop-filter:blur(8px);box-shadow:0 5px 18px #0004}
+    .touch:active{background:#ffffff45;transform:scale(.94)}
+    .touch.go{width:64px;height:84px;border-radius:18px;background:#1fae5e33;border-color:#39d97b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#c8ffd8}
+    .touch.go:active{background:#1fae5e88}
+    .touch.stop{width:64px;height:84px;border-radius:18px;background:#c0333330;border-color:#ff5b5b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#ffd0d0}
+    .touch.stop:active{background:#c03333aa}
+    @media(hover:none) and (pointer:coarse),(max-width:700px){.mobile{display:flex}}
+
+    /* ✅ MEDIA QUERY สำหรับมือถือ (ย้ายมาตรวัดขึ้นด้านบน) */
     @media(max-width:700px){
       .instructions{display:none}
       .camera-toggle{top:76px;right:13px;padding:9px 12px}
@@ -63,10 +77,21 @@
       .stat span{font-size:.52rem}
       .stat strong{font-size:.88rem}
       .credit{display:none}
-      .dashboard{bottom:105px;right:14px;gap:10px;transform:scale(0.8);transform-origin: bottom right;}
+
+      /* ย้าย Dashboard ไปกลางจอด้านบน */
+      .dashboard{
+        top: 78px;
+        left: 50%;
+        right: auto;
+        bottom: auto;
+        transform: translateX(-50%) scale(0.8);
+        transform-origin: top center;
+        gap: 8px;
+      }
       .gauge{width:100px;height:100px}
       .gauge .value{top:60%;font-size:.9rem}
       .gauge .label{bottom:15px;font-size:.45rem}
+
       .menu-container{left:10px;bottom:100px;gap:10px;transform:scale(0.9);transform-origin: bottom left;}
       .btn-item{padding:6px 9px;gap:8px}
       .btn-item .name{font-size:.7rem}
@@ -77,22 +102,12 @@
       .touch{width:54px;height:54px}
       .pedals .touch{width:47px;height:67px}
       .stats{gap:4px}
-      .dashboard{transform:scale(0.7);bottom:95px;}
+      .dashboard{transform:translateX(-50%) scale(0.7);top:74px;}
       .menu-container{bottom:95px;transform:scale(0.8);}
     }
   
     .toast{position:absolute;left:50%;bottom:130px;transform:translateX(-50%) translateY(10px);padding:8px 18px;border:1px solid #ffffff30;border-radius:20px;background:#071015d8;color:#ffd7d7;font:600 .7rem "Segoe UI",sans-serif;letter-spacing:.03em;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;z-index:14;white-space:nowrap}
     .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-    .mobile{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;align-items:flex-end;padding:0 16px 18px;z-index:9;pointer-events:none}
-    .mobile .pad{display:flex;gap:14px;pointer-events:auto}
-    .mobile .pedals{display:flex;gap:12px;align-items:flex-end;pointer-events:auto}
-    .touch{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;width:64px;height:64px;border-radius:50%;border:1px solid #ffffff45;background:#ffffff16;color:#fff;font:700 1.6rem/64px "Segoe UI",sans-serif;text-align:center;backdrop-filter:blur(8px);box-shadow:0 5px 18px #0004}
-    .touch:active{background:#ffffff45;transform:scale(.94)}
-    .touch.go{width:64px;height:84px;border-radius:18px;background:#1fae5e33;border-color:#39d97b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#c8ffd8}
-    .touch.go:active{background:#1fae5e88}
-    .touch.stop{width:64px;height:84px;border-radius:18px;background:#c0333330;border-color:#ff5b5b66;font:700 .78rem/84px "Segoe UI",sans-serif;color:#ffd0d0}
-    .touch.stop:active{background:#c03333aa}
-    @media(hover:none) and (pointer:coarse),(max-width:700px){.mobile{display:flex}}
   </style>
 <base target="_blank">
 </head>
@@ -111,6 +126,7 @@
   <div id="message" class="message"><strong>EVENING DRIVE</strong><span>กำลังโหลดรถ 3 มิติ…</span></div>
   <div id="toast" class="toast">ชนขอบทาง ลดความเร็วลง</div>
   
+  <!-- ✅ Dashboard: มีแค่จุดเดียวตรงนี้เท่านั้น -->
   <div class="dashboard">
     <div class="gauge">
       <canvas id="rpmGauge" width="240" height="240"></canvas>
@@ -159,7 +175,7 @@
 <script src="./three.min.js"></script>
 <script src="./GLTFLoader.js"></script>
 <script src="./porsche-data.js"></script>
-<script src="./jdm-data.js"></script> <!-- ✅ เพิ่มบรรทัดนี้เพื่อโหลด JDM จาก Base64 -->
+<script src="./jdm-data.js"></script>
 <script>
 (() => {
   const THREE = window.THREE;
@@ -220,8 +236,8 @@
     {
       id: "350z",
       name: "JDM Drift Car",
-      dataKey: "JDM_GLB_DATA", // ✅ ใช้ตัวแปร Base64
-      isExternal: false,      // ✅ เปลี่ยนเป็น false เพื่อโหลดจากตัวแปร
+      dataKey: "JDM_GLB_DATA",
+      isExternal: false,
       customScale: 0.01, 
       modelRotationY: 0,
       yOffsetCorrection: -0.17,
@@ -1222,18 +1238,16 @@
   let botCars = [];
   const BOT_LANES=[-9,-3,3,9];
   const BOT_COLORS=[0x4a90d9,0x1a1c1f,0xd91a1a,0x8cd91a,0xc0c8d0,0xe8e4da,0x7a4a2a,0x2a7a6a];
-  const BOT_SPAWN_MIN=-180;
-  const BOT_SPAWN_MAX=-900;
-  const BOT_COLLISION_DZ=5.2;
-  const BOT_COLLISION_DX=2.3;
-  const PLAYER_HALF_DZ=2.6;
-  const PLAYER_HALF_DX=1.1;
+  const BOT_COLLISION_DZ=4.0;
+  const BOT_COLLISION_DX=1.5;
+  const PLAYER_HALF_DZ=2.0;
+  const PLAYER_HALF_DX=0.9;
 
   function spawnBots(){
     if(!vehicleTemplate)return;
     for(const b of botCars){ scene.remove(b.mesh); }
     botCars.length = 0;
-    for(let i=0;i<12;i++){
+    for(let i=0;i<24;i++){
       const bot=vehicleTemplate.clone(true);
       const color=BOT_COLORS[i%BOT_COLORS.length];
       
@@ -1248,7 +1262,7 @@
         }
       });
       const lane=BOT_LANES[i%BOT_LANES.length];
-      const spawnZ = worldZ + BOT_SPAWN_MIN - Math.random()*(BOT_SPAWN_MAX - BOT_SPAWN_MIN);
+      const spawnZ = worldZ - (100 + Math.random()*300);
       bot.position.set(lane,.18,spawnZ);
       bot.rotation.y=Math.PI;
       scene.add(bot);
@@ -1265,7 +1279,7 @@
   function respawnBot(bot){
     bot.lane = BOT_LANES[Math.floor(Math.random()*BOT_LANES.length)];
     bot.speed = 55 + Math.random()*45;
-    bot.z = worldZ - (650 + Math.random()*250);
+    bot.z = worldZ - (100 + Math.random()*300);
     bot.mesh.position.x = bot.lane;
     bot.mesh.position.z = bot.z;
   }
@@ -1660,12 +1674,11 @@
           if (overlapZ < overlapX){
             const dir = dz > 0 ? -1 : 1;
             worldZ -= dir * overlapZ;
-            speed = Math.max(0, speed - 120*dt);
-            if (speed > 0) speed *= 0.5;
+            speed = Math.max(0, speed - 80*dt);
           } else {
             const dir = dx > 0 ? -1 : 1;
-            offset += dir * overlapX;
-            speed = Math.max(0, speed - 80*dt);
+            offset += dir * overlapX * 0.7;
+            speed = Math.max(0, speed - 50*dt);
           }
           if (Math.random() < dt*4) showToast();
         }
